@@ -21,7 +21,9 @@ from sqlalchemy.orm import (
 )
 
 from database.models.base import Base
-
+from database import validators
+from security.passwords import hash_password
+from security.utils import generate_secure_token
 
 class UserGroupEnum(str, enum.Enum):
     USER = "user"
@@ -51,7 +53,7 @@ class UserModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
-    password: Mapped[str] = mapped_column(String(255), nullable=False)
+    _hashed_password: Mapped[str] = mapped_column("hashed_password", String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -63,7 +65,6 @@ class UserModel(Base):
     group_id: Mapped[int] = mapped_column(ForeignKey("user_groups.id", ondelete="CASCADE"), nullable=False)
     group: Mapped["UserGroupModel"] = relationship("UserGroupModel", back_populates="users")
 
-
     profile: Mapped[Optional["UserProfileModel"]] = relationship(
         "UserProfileModel",
         back_populates="user",
@@ -72,6 +73,24 @@ class UserModel(Base):
 
     def __repr__(self):
         return f"<UserModel(id={self.id}, email={self.email}, is_active={self.is_active})>"
+
+    def has_group(self, group_name: UserGroupEnum) -> bool:
+        return self.group.name == group_name
+
+    @classmethod
+    def create(cls, email: str, raw_password: str, group_id: int | Mapped[int]) -> "UserModel":
+        user = cls(email=email, group_id=group_id)
+        user.password = raw_password
+        return user
+
+    @property
+    def password(self) -> None:
+        raise AttributeError("Password is write-only. Use the setter to set the password.")
+
+    @password.setter
+    def password(self, raw_password: str) -> None:
+        validators.validate_password_strength(raw_password)
+        self._hashed_password = hash_password(raw_password)
 
 
 
@@ -99,3 +118,22 @@ class UserProfileModel(Base):
             f"<UserProfileModel(id={self.id}, first_name={self.first_name}, last_name={self.last_name}, "
             f"gender={self.gender}, date_of_birth={self.date_of_birth})>"
         )
+
+
+class TokenBaseModel(Base):
+    __abstract__ = True
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    token: Mapped[str] = mapped_column(
+        String(64),
+        unique=True,
+        nullable=False,
+        default=generate_secure_token
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc) + timedelta(days=1)
+    )
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
