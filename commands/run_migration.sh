@@ -20,6 +20,7 @@ if ! psql -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\dt" | g
 
     # Check if there are existing migration files
     if [ -z "$(ls -A "$MIGRATIONS_DIR")" ]; then
+        pwd
         echo "No migration files found. Generating initial migration..."
         alembic -c $ALEMBIC_CONFIG revision --autogenerate -m "initial migration"
     fi
