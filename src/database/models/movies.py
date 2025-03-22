@@ -1,14 +1,14 @@
+from decimal import Decimal
 from typing import Optional
 from uuid import UUID, uuid4
 
-from pydantic import condecimal
 from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
     ForeignKey,
     Table,
-    Column
+    Column, Numeric
 )
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
@@ -122,7 +122,7 @@ class MovieModel(Base):
     meta_score: Mapped[Optional[float]] = mapped_column(nullable=True)
     gross: Mapped[Optional[float]] = mapped_column(nullable=True)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    price: condecimal(max_digits=10, decimal_places=2)
+    price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
 
     genres: Mapped[list["GenreModel"]] = relationship(
         "GenreModel",
