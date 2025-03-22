@@ -1,27 +1,15 @@
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 
-from database.session import init_db, close_db
 from routes import (
     movie_router,
     accounts_router,
     order_router,
     payments_router,
-    shopping_cart_router
+    shopping_cart_router,
 )
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await init_db()
-    yield
-    await close_db()
-
 
 app = FastAPI(
     title="Online Cinema",
-    lifespan=lifespan,
 )
 
 api_version_prefix = "/api"
