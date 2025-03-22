@@ -65,6 +65,9 @@ class UserModel(Base):
     group_id: Mapped[int] = mapped_column(ForeignKey("user_groups.id", ondelete="CASCADE"), nullable=False)
     group: Mapped["UserGroupModel"] = relationship("UserGroupModel", back_populates="users")
 
+    orders = relationship("OrderModel", back_populates="user")
+    cart = relationship("CartModel", back_populates="user")
+
     profile: Mapped[Optional["UserProfileModel"]] = relationship(
         "UserProfileModel",
         back_populates="user",

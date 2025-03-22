@@ -131,7 +131,7 @@ class MovieModel(Base):
     )
 
     stars: Mapped[list["StarModel"]] = relationship(
-        "ActorModel",
+        "StarModel",
         secondary=MovieStarsModel,
         back_populates="movies"
     )
@@ -140,6 +140,10 @@ class MovieModel(Base):
         "DirectorModel",
         secondary=MovieDirectorsModel,
         back_populates="movies"
+    )
+
+    order_items: Mapped[list["OrderItemModel"]] = relationship(
+        "OrderItemModel", back_populates="movie"
     )
 
     certification_id: Mapped[int] = mapped_column(ForeignKey("certifications.id"))
