@@ -142,7 +142,7 @@ class MovieModel(Base):
         back_populates="movies"
     )
 
-    certification_id: Mapped[int] = mapped_column(ForeignKey("certifications.id"))
+    certification_id: Mapped[int] = mapped_column(ForeignKey("certifications.id"), nullable=False)
     certification: Mapped["CertificationModel"] = relationship(back_populates="movies")
 
     __table_args__ = (
