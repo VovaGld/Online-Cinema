@@ -19,7 +19,8 @@ dependencies = [
     "notifications (>=0.3.2,<0.4.0)",
     "passlib (>=1.7.4,<2.0.0)",
     "alembic (>=1.15.1,<2.0.0)",
-    "psycopg2-binary (>=2.9.10,<3.0.0)"
+    "asyncpg (>=0.30.0,<0.31.0)",
+    "psycopg2-binary (>=2.9.10,<3.0.0)",
 ]
 
 
