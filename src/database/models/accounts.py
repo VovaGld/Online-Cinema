@@ -20,7 +20,7 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from base import Base
+from database.models.base import Base
 
 
 class UserGroupEnum(str, enum.Enum):
