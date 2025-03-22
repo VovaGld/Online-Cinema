@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
-from database.models import accounts, movies
+from database.models import accounts, movies, orders, shopping_cart
 from database.models.base import Base
 
 BASE_DIR = Path(__file__).parent.parent
