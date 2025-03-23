@@ -1,7 +1,9 @@
+from dotenv import load_dotenv
 import os
 from security.interfaces import JWTAuthManagerInterface
 from security.jwt_auth_manager import JWTAuthManager
 
+load_dotenv()
 
 def get_jwt_auth_manager() -> JWTAuthManagerInterface:
     secret_key_access = os.getenv("SECRET_KEY_ACCESS")

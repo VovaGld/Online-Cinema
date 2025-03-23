@@ -1,5 +1,3 @@
-import datetime
-
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -159,7 +157,7 @@ async def login_user(
     try:
         refresh_token = RefreshTokenModel.create(
             user_id=user.id,
-            days_valid=datetime.timedelta(days=30),
+            days_valid=30,
             token=jwt_refresh_token
         )
         db.add(refresh_token)
