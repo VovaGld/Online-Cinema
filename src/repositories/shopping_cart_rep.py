@@ -69,7 +69,7 @@ class ShoppingCartRepository:
             .filter(CartItemModel.cart_id == cart.id)
         )
 
-        return result.scalars().all()
+        return result.unique().scalars().all()
 
     async def create_item(self, cart: CartModel, movie: MovieModel) -> CartItemModel:
         existing_item = self.get_item_by_movie_id(cart, movie.id)
