@@ -22,7 +22,7 @@ from sqlalchemy.orm import (
 
 from database.models.base import Base
 from database import validators
-from security.passwords import hash_password
+from security.passwords import hash_password, verify_password
 from security.utils import generate_secure_token
 
 class UserGroupEnum(str, enum.Enum):
@@ -62,11 +62,18 @@ class UserModel(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
 
+    orders: Mapped[list["OrderModel"]] = relationship("OrderModel", back_populates="user")
+    cart: Mapped["CartModel"] = relationship("CartModel", back_populates="user")
+
     group_id: Mapped[int] = mapped_column(ForeignKey("user_groups.id", ondelete="CASCADE"), nullable=False)
     group: Mapped["UserGroupModel"] = relationship("UserGroupModel", back_populates="users")
 
-    orders = relationship("OrderModel", back_populates="user")
-    cart = relationship("CartModel", back_populates="user")
+
+    refresh_tokens: Mapped[List["RefreshTokenModel"]] = relationship(
+        "RefreshTokenModel",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
 
     profile: Mapped[Optional["UserProfileModel"]] = relationship(
         "UserProfileModel",
@@ -95,6 +102,8 @@ class UserModel(Base):
         validators.validate_password_strength(raw_password)
         self._hashed_password = hash_password(raw_password)
 
+    def verify_password(self, raw_password: str) -> bool:
+        return verify_password(raw_password, self._hashed_password)
 
 
 class UserProfileModel(Base):
@@ -140,3 +149,30 @@ class TokenBaseModel(Base):
     )
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+
+class RefreshTokenModel(TokenBaseModel):
+    __tablename__ = "refresh_tokens"
+
+    user: Mapped[UserModel] = relationship("UserModel", back_populates="refresh_tokens")
+    token: Mapped[str] = mapped_column(
+        String(512),
+        unique=True,
+        nullable=False,
+        default=generate_secure_token
+    )
+
+    @classmethod
+    def create(cls, user_id: int | Mapped[int], days_valid: int, token: str) -> "RefreshTokenModel":
+        """
+        Factory method to create a new RefreshTokenModel instance.
+
+        This method simplifies the creation of a new refresh token by calculating
+        the expiration date based on the provided number of valid days and setting
+        the required attributes.
+        """
+        expires_at = datetime.now(timezone.utc) + timedelta(days=days_valid)
+        return cls(user_id=user_id, expires_at=expires_at, token=token)
+
+    def __repr__(self):
+        return f"<RefreshTokenModel(id={self.id}, token={self.token}, expires_at={self.expires_at})>"
