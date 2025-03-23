@@ -66,10 +66,10 @@ async def register_user(
     result = await db.execute(stmt)
     user_group = result.scalars().first()
     if not user_group:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Default user group not found."
-        )
+        user_group = UserGroupModel(name=UserGroupEnum.USER)
+        db.add(user_group)
+        await db.commit()
+        await db.refresh(user_group)
 
     try:
         new_user = UserModel.create(
@@ -81,6 +81,11 @@ async def register_user(
         await db.flush()
         await db.commit()
         await db.refresh(new_user)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except SQLAlchemyError as e:
         await db.rollback()
         raise HTTPException(
