@@ -32,3 +32,26 @@ class UserRegistrationResponseSchema(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+class UserActivationRequestSchema(BaseModel):
+    email: EmailStr
+    token: str
+
+class MessageResponseSchema(BaseModel):
+    message: str
+
+class TokenRefreshRequestSchema(BaseModel):
+    refresh_token: str
+
+
+class TokenRefreshResponseSchema(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class PasswordResetRequestSchema(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetCompleteRequestSchema(BaseEmailPasswordSchema):
+    token: str

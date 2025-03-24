@@ -2,6 +2,10 @@ class CartItemException(Exception):
     pass
 
 
+class CartItemNotInCartError(CartItemException):
+    pass
+
+
 class CartItemAlreadyInCartError(CartItemException):
     pass
 

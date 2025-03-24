@@ -1,31 +1,72 @@
-from fastapi import APIRouter
-# from sqlalchemy.exc import SQLAlchemyError
-# from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import date
 
-# from database.session import get_db
-# from repositories.order_rep import create_order, get_movie_from_card
-# from schemas.order import OrderCreateResponseSchema
+from fastapi import APIRouter, Depends, Request, Query
+from sqlalchemy.exc import SQLAlchemyError
+from typing_extensions import Optional
+
+from database.models.orders import OrderStatus
+from dependencies.order import get_order_service
+from schemas.order import OrderCreateResponseSchema, OrderListSchema
+from security.http import get_token
+from services.order_service import OrderService
 
 router = APIRouter()
 
-# @router.post("/create/")
-# async def create(
-#     db: AsyncSession = Depends(get_db)
-# ) -> OrderCreateResponseSchema:
-#     try:
-#         order = await create_order(
-#             db=db,
-#             user_id=1,
-#             movies= await get_movie_from_card(
-#                 user_id=1,
-#                 db=db
-#             )
-#         )
-#     except SQLAlchemyError as e:
-#         raise e
-#     return OrderCreateResponseSchema(
-#         order_id=order.id,
-#         total_price=order.total_amount,
-#         status=order.status,
-#         payment_url="some url",
-#     )
+
+@router.post("/create/")
+async def create(
+        order: OrderService = Depends(get_order_service),
+        request: Request = Request
+) -> OrderCreateResponseSchema:
+    try:
+        order = await order.create_order()
+        cancel_url = request.url_for("cancel_order", order_id=order.id)
+    except SQLAlchemyError as e:
+        raise e
+    return OrderCreateResponseSchema(
+        order_id=order.id,
+        total_price=order.total_amount,
+        status=order.status,
+        payment_url="some url",
+        cancel_url=str(cancel_url)
+    )
+
+
+@router.get("/list/", response_model=OrderListSchema)
+async def get_orders(
+        order: OrderService = Depends(get_order_service),
+        user_id: Optional[int] = Query(None),
+        status: Optional[OrderStatus] = Query(None),
+        date_order: Optional[date] = Query(None)
+) -> OrderListSchema:
+    if await order.user_crud.check_user_is_admin():
+        if user_id or status or date_order:
+            orders = await order.get_order_with_params(
+                user_id=user_id,
+                status=status,
+                date_order=date_order
+            )
+        else:
+            orders = await order.get_all_orders()
+    else:
+        user = await order.user_crud.get_user_from_token()
+        orders = await order.get_orders(user.id)
+
+    result = [
+        OrderCreateResponseSchema(
+            order_id=order.id,
+            total_price=order.total_amount,
+            status=order.status,
+            payment_url="some url",
+        ) for order in orders
+    ]
+    return OrderListSchema(orders=result)
+
+
+@router.post("/cancel/{order_id}")
+async def cancel_order(
+        order_id: int,
+        order: OrderService = Depends(get_order_service)
+):
+    await order.set_canceled_status(order_id)
+    return {"message": "Order cancelled"}

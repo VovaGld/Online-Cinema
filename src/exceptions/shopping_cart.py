@@ -6,10 +6,6 @@ class CreateShoppingCartError(ShoppingCartException):
     pass
 
 
-class CartItemAlreadyInCartError(ShoppingCartException):
-    pass
-
-
 class AddCartItemError(ShoppingCartException):
     pass
 
