@@ -1,5 +1,5 @@
 from typing import List, Optional
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +18,18 @@ class OrderRepository:
     async def get_order_by_id(self, order_id: int) -> Optional[OrderModel]:
         result = await self.db.execute(select(OrderModel).filter_by(id=order_id))
         return result.scalars().first()
+
+    async def get_orders_with_params(self, **kwargs) -> List[OrderModel]:
+        query = select(OrderModel)
+        if kwargs.get("status"):
+            query = query.filter_by(status=kwargs["status"])
+        if kwargs.get("user_id"):
+            query = query.filter_by(user_id=kwargs["user_id"])
+        if kwargs.get("date_order"):
+            query = query.filter(func.date(OrderModel.created_at) == kwargs["date_order"])
+
+        result = await self.db.execute(query)
+        return result.scalars().all()
 
     async def create_order(self, user_id: int) -> OrderModel:
         try:

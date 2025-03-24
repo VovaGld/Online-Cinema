@@ -52,6 +52,9 @@ class OrderService:
     async def get_orders(self, user_id: int) -> list[OrderModel]:
         return await self.order_crud.get_orders(user_id)
 
+    async def get_order_with_params(self, **kwargs) -> list[OrderModel]:
+        return await self.order_crud.get_orders_with_params(**kwargs)
+
     async def set_canceled_status(self, order_id: int) -> None:
         await self.order_crud.set_status(order_id, "canceled")
 

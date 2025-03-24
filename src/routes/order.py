@@ -1,6 +1,10 @@
-from fastapi import APIRouter, Depends, Request
-from sqlalchemy.exc import SQLAlchemyError
+from datetime import date
 
+from fastapi import APIRouter, Depends, Request, Query
+from sqlalchemy.exc import SQLAlchemyError
+from typing_extensions import Optional
+
+from database.models.orders import OrderStatus
 from dependencies.order import get_order_service
 from schemas.order import OrderCreateResponseSchema, OrderListSchema
 from services.order_service import OrderService
@@ -29,9 +33,21 @@ async def create(
 
 @router.get("/list/", response_model=OrderListSchema)
 async def get_orders(
-        order: OrderService = Depends(get_order_service)
+        order: OrderService = Depends(get_order_service),
+        user_id: Optional[int] = Query(None),
+        status: Optional[OrderStatus] = Query(None),
+        date_order: Optional[date] = Query(None)
 ) -> OrderListSchema:
-    orders = await order.get_orders(user_id=2)
+
+    if user_id or status or date_order:
+        orders = await order.get_order_with_params(
+            user_id=user_id,
+            status=status,
+            date_order=date_order
+        )
+    else:
+        orders = await order.get_orders(user_id=2)
+
     result = [
         OrderCreateResponseSchema(
             order_id=order.id,
