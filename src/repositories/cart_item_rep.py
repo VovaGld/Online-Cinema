@@ -56,7 +56,13 @@ class CartItemRepository:
             await self._session.rollback()
             print(f"SQLAlchemy error: {exception}")
             raise AddCartItemError(str(exception))
-        return cart_item
+
+        result = await self._session.execute(
+            select(CartItemModel)
+            .options(joinedload(CartItemModel.movie).joinedload(MovieModel.genres))
+            .filter(CartItemModel.id == cart_item.id)
+        )
+        return result.scalars().first()
 
     async def delete_cart_item(self, cart_item_id: int) -> None:
         try:
