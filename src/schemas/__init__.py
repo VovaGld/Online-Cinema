@@ -4,5 +4,7 @@ from schemas.accounts import (
     UserLoginResponseSchema,
     UserLoginRequestSchema,
     UserActivationRequestSchema,
-    MessageResponseSchema
+    MessageResponseSchema,
+    TokenRefreshRequestSchema,
+    TokenRefreshResponseSchema
 )
