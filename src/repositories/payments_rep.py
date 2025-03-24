@@ -49,4 +49,4 @@ class PaymentRepository:
     async def get_pending_payments(self) -> List[Payment]:
         query = select(Payment).where(Payment.status == PaymentStatus.PENDING)
         result = await self.db.execute(query)
-        return list(result.scalars().all()) 
+        return list(result.scalars().all())

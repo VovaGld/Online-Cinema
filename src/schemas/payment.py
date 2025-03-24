@@ -27,4 +27,4 @@ class PaymentInDB(PaymentBase):
         from_attributes = True
 
 class PaymentResponse(PaymentInDB):
-    pass 
+    pass
