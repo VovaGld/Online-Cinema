@@ -2,6 +2,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from exceptions.cart_item import CartItemNotInCartError, CartItemAlreadyInCartError
+from exceptions.shopping_cart import DeleteCartItemError
 from security.jwt_auth_manager import JWTAuthManagerInterface
 from services.shopping_cart import ShoppingCartService
 from dependencies.shopping_cart import get_shopping_cart_service
@@ -10,7 +12,8 @@ from dependencies.accounts import get_jwt_auth_manager
 from schemas.shopping_cart import (
     CartItemCreateSchema,
     CartItemDetailSchema,
-    CartDetailSchema
+    CartDetailSchema,
+    CartItemResponseSchema,
 )
 
 
@@ -40,7 +43,8 @@ async def get_cart(
 
 
 @router.post(
-    "/add",
+    "/add/{movie_id}",
+    status_code=status.HTTP_201_CREATED,
     response_model=CartItemDetailSchema,
     summary="Add a movie to the shopping cart",
     description=(
@@ -54,22 +58,26 @@ async def get_cart(
     }
 )
 async def add_to_cart(
-        item_data: CartItemCreateSchema,
+        movie_id: int,
         cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
         token: Annotated[str, Depends(get_token)],
         jwt_manager: Annotated[JWTAuthManagerInterface, Depends(get_jwt_auth_manager)],
 ) -> CartItemDetailSchema:
-    movie_id = item_data.movie_id
     cart = await cart_service.get_user_cart(token, jwt_manager)
 
-    response = await cart_service.add_movie_to_cart(cart.id, movie_id)
-
+    try:
+        response = await cart_service.add_movie_to_cart(cart.id, movie_id)
+    except CartItemAlreadyInCartError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Movie already in cart."
+        )
     return response
 
 
 @router.delete(
     "/remove/{movie_id}",
-    response_model=CartItemDetailSchema,
+    status_code=status.HTTP_204_NO_CONTENT,
     summary="Remove a movie from the shopping cart",
     description=(
         "<h3>Removes a specific movie from the user's shopping cart.</h3>"
@@ -80,35 +88,17 @@ async def add_to_cart(
         401: {"description": "Unauthorized request."}
     }
 )
-def remove_from_cart(
+async def remove_from_cart(
         movie_id: int,
-        db: Annotated[Session, Depends(get_postgresql_db)],
+        cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
         token: Annotated[str, Depends(get_token)],
-        jwt_manager: Annotated[JWTAuthManager, Depends(get_jwt_auth_manager)]
-) -> CartItemResponse:
+        jwt_manager: Annotated[JWTAuthManagerInterface, Depends(get_jwt_auth_manager)]
+) -> None:
+    cart = await cart_service.get_user_cart(token, jwt_manager)
+
     try:
-        payload = jwt_manager.decode_access_token(token)
-        user_id = payload.get("user_id")
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(e)
-        )
-
-    user = get_user_by_id(db, user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-
-    cart = get_user_cart(user, db)
-    if not cart:
-        raise HTTPException(status_code=404, detail="Cart not found")
-
-    cart_item = get_cart_item(cart, movie_id, db)
-    if not cart_item:
-        raise HTTPException(status_code=404, detail="Movie not in cart")
-
-    delete_cart_item(cart_item, db)
-    return CartItemResponse(message="Movie removed from cart")
+        await cart_service.remove_movie_from_cart(cart.id, movie_id)
+    except CartItemNotInCartError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not in cart")
+    except DeleteCartItemError:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to remove movie")
