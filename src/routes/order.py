@@ -66,4 +66,3 @@ async def cancel_order(
 ):
     await order.set_canceled_status(order_id)
     return {"message": "Order cancelled"}
-

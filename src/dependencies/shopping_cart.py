@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,18 +10,20 @@ from services.shopping_cart import ShoppingCartService
 
 
 def get_shopping_cart_repository(
-    session: AsyncSession = Depends(get_db),
+    session: Annotated[AsyncSession, Depends(get_db)],
 ) -> ShoppingCartRepository:
     return ShoppingCartRepository(session=session)
 
+
 def get_shopping_cart_item_repository(
-    session: AsyncSession = Depends(get_db),
+    session: Annotated[AsyncSession, Depends(get_db)],
 ) -> CartItemRepository:
     return CartItemRepository(session=session)
 
+
 def get_shopping_cart_service(
-    shopping_cart_repository = Depends(get_shopping_cart_repository),
-    cart_item_repository = Depends(get_shopping_cart_item_repository),
+    shopping_cart_repository: Annotated[ShoppingCartRepository, Depends(get_shopping_cart_repository)],
+    cart_item_repository: Annotated[CartItemRepository, Depends(get_shopping_cart_item_repository)],
 ) -> ShoppingCartService:
     return ShoppingCartService(
         shopping_cart_repository=shopping_cart_repository,

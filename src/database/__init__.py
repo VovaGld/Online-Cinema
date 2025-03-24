@@ -3,4 +3,5 @@ from database.models.accounts import (
     UserModel,
     UserGroupModel,
     UserGroupEnum,
+    RefreshTokenModel,
 )
