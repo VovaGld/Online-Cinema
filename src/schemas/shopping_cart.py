@@ -18,5 +18,6 @@ class CartItemDetailSchema(BaseModel):
 
 
 class CartResponseSchema(BaseModel):
+    id: int
     user_id: int
     items: List[CartItemDetailSchema]
