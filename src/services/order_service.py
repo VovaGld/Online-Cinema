@@ -1,7 +1,9 @@
 from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from database import UserGroupEnum
 from database.models.orders import OrderModel
+from repositories.accounts_rep import UserRepository
 from repositories.cart_item_rep import CartItemRepository
 from repositories.order_item_rep import OrderItemRepository
 from repositories.order_rep import OrderRepository
@@ -17,16 +19,20 @@ class OrderService:
             order_item_repository: OrderItemRepository,
             cart_repository: ShoppingCartRepository,
             cart_item_repository: CartItemRepository,
+            user_repository: UserRepository,
+
     ):
         self.db = db
         self.order_crud = order_repository
         self.order_item_crud = order_item_repository
         self.cart_crud = cart_repository
         self.cart_item_crud = cart_item_repository
+        self.user_crud = user_repository
 
-    async def create_order(self, user_id: int) -> OrderModel:
+    async def create_order(self) -> OrderModel:
         try:
-            user_cart = await self.cart_crud.get_user_cart(user_id)
+            user = await self.user_crud.get_user_from_token()
+            user_cart = await self.cart_crud.get_user_cart(user.id)
 
             cart_items = await self.cart_item_crud.get_all_cart_items_by_cart_id(user_cart.id)
 
@@ -35,14 +41,14 @@ class OrderService:
 
             movie_ids = [item.movie_id for item in cart_items]
 
-            order = await self.order_crud.create_order(user_id)
+            order = await self.order_crud.create_order(user.id)
 
             order_items = await self.order_item_crud.create_order_items(order.id, movie_ids)
 
             total_price = Decimal(sum(item.price_at_order for item in order_items))
             await self.order_crud.update_total_price(order, total_price)
 
-            await self.cart_item_crud.delete_all_cart_items(user_cart.id)
+            # await self.cart_item_crud.delete_all_cart_items(user_cart.id)
 
             return order
         except Exception as e:
@@ -52,6 +58,10 @@ class OrderService:
     async def get_orders(self, user_id: int) -> list[OrderModel]:
         return await self.order_crud.get_orders(user_id)
 
+    async def get_all_orders(self) -> list[OrderModel]:
+        return await self.order_crud.get_all_orders()
+
+
     async def get_order_with_params(self, **kwargs) -> list[OrderModel]:
         return await self.order_crud.get_orders_with_params(**kwargs)
 
@@ -60,3 +70,7 @@ class OrderService:
 
     async def set_paid_status(self, order_id: int) -> None:
         await self.order_crud.set_status(order_id, "paid")
+
+    async def check_user_is_admin(self):
+        user = await self.user_crud.get_user_from_token()
+        return user.group == UserGroupEnum.ADMIN
