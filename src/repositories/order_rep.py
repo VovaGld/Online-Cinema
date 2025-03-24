@@ -15,6 +15,10 @@ class OrderRepository:
         result = await self.db.execute(select(OrderModel).filter_by(user_id=user_id))
         return result.scalars().all()
 
+    async def get_all_orders(self) -> List[OrderModel]:
+        result = await self.db.execute(select(OrderModel))
+        return result.scalars().all()
+
     async def get_order_by_id(self, order_id: int) -> Optional[OrderModel]:
         result = await self.db.execute(select(OrderModel).filter_by(id=order_id))
         return result.scalars().first()
