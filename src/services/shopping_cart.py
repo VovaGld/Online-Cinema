@@ -10,7 +10,8 @@ from schemas.shopping_cart import (
     CartItemDetailSchema,
 )
 from security.interfaces import JWTAuthManagerInterface
-from exceptions.cart_item import CartItemAlreadyInCartError
+from exceptions.cart_item import CartItemNotInCartError
+
 
 class ShoppingCartService:
     def __init__(
@@ -41,6 +42,8 @@ class ShoppingCartService:
         return response
 
     async def get_cart_items_details(self, cart: CartModel) -> List[CartItemDetailSchema]:
+        items = await self.cart_item_repository.get_all_cart_items_by_cart_id(cart.id)
+
         return [
             CartItemDetailSchema(
                 id=item.id,
@@ -51,7 +54,7 @@ class ShoppingCartService:
                 release_year=item.movie.year,
                 warning=None,
             )
-            for item in cart.items
+            for item in items
         ] if cart else []
 
     async def get_cart_item_detail(self, item: CartItemModel) -> CartItemDetailSchema:
@@ -70,15 +73,24 @@ class ShoppingCartService:
         return cart
 
     async def add_movie_to_cart(self, cart_id: int, movie_id) -> CartItemDetailSchema:
-        try:
-            new_item = await self.cart_item_repository.create_cart_item(cart_id, movie_id)
-        except CartItemAlreadyInCartError:
-            raise HTTPException(
-                status_code=400,
-                detail="Movie already in cart."
-            )
+        new_item = await self.cart_item_repository.create_cart_item(cart_id, movie_id)
+
         response = await self.get_cart_item_detail(new_item)
         return response
+
+    async def remove_movie_from_cart(self, cart_id: int, movie_id) -> None:
+        cart_item = await (
+            self
+            .cart_item_repository
+            .get_cart_item_by_cart_id_and_movie_id(
+                cart_id, movie_id
+            )
+        )
+
+        if not cart_item:
+            raise CartItemNotInCartError("Movie not found in cart")
+
+        await self.cart_item_repository.delete_cart_item(cart_item)
 
     async def clear_cart(self, cart_id: int) -> None:
         await self.cart_item_repository.delete_all_cart_items(cart_id)
