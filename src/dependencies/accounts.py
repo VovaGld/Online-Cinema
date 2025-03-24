@@ -9,6 +9,7 @@ from repositories.accounts_rep import UserRepository
 from security.http import get_token
 from security.interfaces import JWTAuthManagerInterface
 from security.jwt_auth_manager import JWTAuthManager
+from storages import S3StorageInterface, S3StorageClient
 
 load_dotenv()
 
@@ -36,3 +37,17 @@ def get_user_repository(
         token: str = Depends(get_token)
 ) -> UserRepository:
     return UserRepository(session=session, JWTmanager=JWTmanager, token=token)
+
+
+def get_s3_storage_client() -> S3StorageInterface:
+    endpoint_url = f"http://{os.getenv('MINIO_HOST')}:{os.getenv('MINIO_PORT')}"
+    access_key = os.getenv('MINIO_ROOT_USER')
+    secret_key = os.getenv('MINIO_ROOT_PASSWORD')
+    bucket_name = os.getenv('MINIO_STORAGE')
+
+    return S3StorageClient(
+        endpoint_url=endpoint_url,
+        access_key=access_key,
+        secret_key=secret_key,
+        bucket_name=bucket_name
+    )
