@@ -1,9 +1,13 @@
-from tkinter.tix import Select
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import MovieModel, GenreModel, StarModel, DirectorModel, CertificationModel
+from database.models import (
+    MovieModel,
+    GenreModel,
+    StarModel,
+    DirectorModel,
+    CertificationModel
+)
 from schemas.movie import MovieCreateSchema
 
 
@@ -45,9 +49,9 @@ class MovieRepository:
         result = await self.db.execute(select(MovieModel))
         return result.scalars().all
 
-    def delete(self, product_id: int):
-        product = self.get(product_id)
-        if product:
-            self.db.delete(product)
-            self.db.commit()
-        return product
+    async def delete(self, movie_id: int):
+        movie = self.get(movie_id)
+        if movie:
+            await self.db.delete(movie)
+            await self.db.commit()
+        return movie
