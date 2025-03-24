@@ -17,7 +17,11 @@ class CartItemDetailSchema(BaseModel):
     release_year: int
 
 
-class CartResponseSchema(BaseModel):
+class CartItemResponseSchema(BaseModel):
+    message: str
+
+
+class CartDetailSchema(BaseModel):
     id: int
     user_id: int
     items: List[CartItemDetailSchema]

@@ -64,10 +64,10 @@ class CartItemRepository:
         )
         return result.scalars().first()
 
-    async def delete_cart_item(self, cart_item_id: int) -> None:
+    async def delete_cart_item(self, cart_item: CartItemModel) -> None:
         try:
-            cart_item = await self.get_cart_item_by_id(cart_item_id)
             await self._session.delete(cart_item)
+            await self._session.commit()
         except SQLAlchemyError as exception:
             await self._session.rollback()
             print(f"SQLAlchemy error: {exception}")
