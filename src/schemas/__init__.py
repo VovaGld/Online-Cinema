@@ -3,4 +3,6 @@ from schemas.accounts import (
     UserRegistrationResponseSchema,
     UserLoginResponseSchema,
     UserLoginRequestSchema,
+    UserActivationRequestSchema,
+    MessageResponseSchema
 )
