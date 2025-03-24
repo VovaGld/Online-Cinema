@@ -6,7 +6,7 @@ from database.models.shopping_cart import CartItemModel, CartModel
 from repositories.shopping_cart_rep import ShoppingCartRepository
 from repositories.cart_item_rep import CartItemRepository
 from schemas.shopping_cart import (
-    CartResponseSchema,
+    CartDetailSchema,
     CartItemDetailSchema,
 )
 from security.interfaces import JWTAuthManagerInterface
@@ -21,7 +21,7 @@ class ShoppingCartService:
         self.shopping_cart_repository = shopping_cart_repository
         self.cart_item_repository = cart_item_repository
 
-    async def get_user_cart(self, token: str, jwt_manager: JWTAuthManagerInterface) -> CartResponseSchema:
+    async def get_user_cart(self, token: str, jwt_manager: JWTAuthManagerInterface) -> CartDetailSchema:
         try:
             payload = jwt_manager.decode_access_token(token)
             user_id = payload.get("user_id")
@@ -33,7 +33,7 @@ class ShoppingCartService:
 
         cart = await self.shopping_cart_repository.get_or_create_cart(user_id)
         items = await self.get_cart_items_details(cart)
-        response = CartResponseSchema(
+        response = CartDetailSchema(
             id=cart.id,
             user_id=user_id,
             items=items
