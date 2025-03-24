@@ -5,6 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from database.models import MovieModel
 from database.models.shopping_cart import CartModel, CartItemModel
 from exceptions.shopping_cart import CreateShoppingCartError
 
@@ -34,8 +35,21 @@ class ShoppingCartRepository:
     async def get_user_cart(self, user_id: int) -> Optional[CartModel]:
         result = await self._session.execute(
             select(CartModel)
-            .options(selectinload(CartModel.items).joinedload(CartItemModel.movie))
+            .options(
+                selectinload(CartModel.items).joinedload(CartItemModel.movie).selectinload(MovieModel.genres)
+            )
             .filter(CartModel.user_id == user_id)
+        )
+        cart = result.scalars().first()
+        return cart if cart else None
+
+    async def get_cart_by_id(self, cart_id: int) -> Optional[CartModel]:
+        result = await self._session.execute(
+            select(CartModel)
+            .options(
+                selectinload(CartModel.items).joinedload(CartItemModel.movie).selectinload(MovieModel.genres)
+            )
+            .filter(CartModel.id == cart_id)
         )
         cart = result.scalars().first()
         return cart if cart else None
