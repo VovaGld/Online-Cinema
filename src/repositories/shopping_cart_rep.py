@@ -42,3 +42,14 @@ class ShoppingCartRepository:
         )
         cart = result.scalars().first()
         return cart if cart else None
+
+    async def get_cart_by_id(self, cart_id: int) -> Optional[CartModel]:
+        result = await self._session.execute(
+            select(CartModel)
+            .options(
+                selectinload(CartModel.items).joinedload(CartItemModel.movie).selectinload(MovieModel.genres)
+            )
+            .filter(CartModel.id == cart_id)
+        )
+        cart = result.scalars().first()
+        return cart if cart else None

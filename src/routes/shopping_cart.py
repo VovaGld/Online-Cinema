@@ -37,3 +37,31 @@ async def get_cart(
 ) -> CartResponseSchema:
     response = await cart_service.get_user_cart(token, jwt_manager)
     return response
+
+
+@router.post(
+    "/add",
+    response_model=CartItemDetailSchema,
+    summary="Add a movie to the shopping cart",
+    description=(
+        "<h3>Add a movie to the user's shopping cart.</h3>"
+        "Validates availability and ensures the movie is not already in the cart."
+    ),
+    responses={
+        404: {"description": "User or movie not found."},
+        400: {"description": "Movie already in cart."},
+        401: {"description": "Unauthorized request."}
+    }
+)
+async def add_to_cart(
+        item_data: CartItemCreateSchema,
+        cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
+        token: Annotated[str, Depends(get_token)],
+        jwt_manager: Annotated[JWTAuthManagerInterface, Depends(get_jwt_auth_manager)],
+) -> CartItemDetailSchema:
+    movie_id = item_data.movie_id
+    cart = await cart_service.get_user_cart(token, jwt_manager)
+
+    response = await cart_service.add_movie_to_cart(cart.id, movie_id)
+
+    return response
