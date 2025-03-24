@@ -21,4 +21,4 @@ class ShoppingCartService:
         return new_item
 
     async def clear_cart(self, cart_id: int) -> None:
-       await self.cart_item_repository.delete_all_cart_items(cart_id)
+        await self.cart_item_repository.delete_all_cart_items(cart_id)
