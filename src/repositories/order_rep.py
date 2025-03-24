@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models.orders import OrderModel
+from database.models.orders import OrderModel, OrderStatus
 
 
 class OrderRepository:
@@ -14,6 +14,10 @@ class OrderRepository:
     async def get_orders(self, user_id: int) -> List[OrderModel]:
         result = await self.db.execute(select(OrderModel).filter_by(user_id=user_id))
         return result.scalars().all()
+
+    async def get_order_by_id(self, order_id: int) -> Optional[OrderModel]:
+        result = await self.db.execute(select(OrderModel).filter_by(id=order_id))
+        return result.scalars().first()
 
     async def create_order(self, user_id: int) -> OrderModel:
         try:
@@ -35,3 +39,11 @@ class OrderRepository:
             await self.db.rollback()
             raise e
 
+    async def set_status(self, order_id: int, status: str) -> None:
+        order = await self.get_order_by_id(order_id)
+        if status == "canceled":
+            order.status = OrderStatus.CANCELED
+        elif status == "paid":
+            order.status = OrderStatus.PAID
+        await self.db.commit()
+        await self.db.refresh(order)
