@@ -7,6 +7,7 @@ from typing_extensions import Optional
 from database.models.orders import OrderStatus
 from dependencies.order import get_order_service
 from schemas.order import OrderCreateResponseSchema, OrderListSchema
+from security.http import get_token
 from services.order_service import OrderService
 
 router = APIRouter()
@@ -18,7 +19,7 @@ async def create(
         request: Request = Request
 ) -> OrderCreateResponseSchema:
     try:
-        order = await order.create_order(user_id=2)
+        order = await order.create_order()
         cancel_url = request.url_for("cancel_order", order_id=order.id)
     except SQLAlchemyError as e:
         raise e
@@ -38,15 +39,18 @@ async def get_orders(
         status: Optional[OrderStatus] = Query(None),
         date_order: Optional[date] = Query(None)
 ) -> OrderListSchema:
-
-    if user_id or status or date_order:
-        orders = await order.get_order_with_params(
-            user_id=user_id,
-            status=status,
-            date_order=date_order
-        )
+    if await order.user_crud.check_user_is_admin():
+        if user_id or status or date_order:
+            orders = await order.get_order_with_params(
+                user_id=user_id,
+                status=status,
+                date_order=date_order
+            )
+        else:
+            orders = await order.get_all_orders()
     else:
-        orders = await order.get_orders(user_id=2)
+        user = await order.user_crud.get_user_from_token()
+        orders = await order.get_orders(user.id)
 
     result = [
         OrderCreateResponseSchema(
