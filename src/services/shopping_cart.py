@@ -51,12 +51,16 @@ class ShoppingCartService:
                 price=item.movie.price,
                 genres=[genre.name for genre in item.movie.genres],
                 release_year=item.movie.year,
-                warning=None,
+                warning=(
+                    "Movie already purchased. It will be removed from your order"
+                    if self.user_repository.is_movie_in_purchased(cart.user_id, item.movie_id)
+                    else None
+                ),
             )
             for item in items
         ] if cart else []
 
-    async def get_cart_item_detail(self, item: CartItemModel) -> CartItemDetailSchema:
+    async def get_cart_item_detail(self, item: CartItemModel, warning: Optional[str]) -> CartItemDetailSchema:
         return CartItemDetailSchema(
                 id=item.id,
                 movie_id=item.movie.id,
@@ -64,17 +68,19 @@ class ShoppingCartService:
                 price=item.movie.price,
                 genres=[genre.name for genre in item.movie.genres],
                 release_year=item.movie.year,
-                warning=None,
+                warning=warning,
             )
 
     async def get_or_create_cart(self, user_id: int):
         cart = await self.shopping_cart_repository.get_or_create_cart(user_id)
         return cart
 
-    async def add_movie_to_cart(self, cart_id: int, movie_id) -> CartItemDetailSchema:
-        new_item = await self.cart_item_repository.create_cart_item(cart_id, movie_id)
-
-        response = await self.get_cart_item_detail(new_item)
+    async def add_movie_to_cart(self, cart: CartModel, movie_id) -> CartItemDetailSchema:
+        new_item = await self.cart_item_repository.create_cart_item(cart.id, movie_id)
+        warning = None
+        if await self.user_repository.is_movie_in_purchased(cart.user_id, movie_id):
+            warning = "Movie already purchased. It will be removed from your order"
+        response = await self.get_cart_item_detail(new_item, warning=warning)
         return response
 
     async def remove_movie_from_cart(self, cart_id: int, movie_id) -> None:

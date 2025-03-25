@@ -71,7 +71,7 @@ async def add_to_cart(
     cart = await cart_service.get_user_cart()
 
     try:
-        response = await cart_service.add_movie_to_cart(cart.id, movie_id)
+        response = await cart_service.add_movie_to_cart(cart, movie_id)
     except CartItemAlreadyInCartError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

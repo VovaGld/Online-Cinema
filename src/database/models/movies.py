@@ -12,7 +12,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-from database.models import OrderItemModel
 from database.models.base import Base
 
 
