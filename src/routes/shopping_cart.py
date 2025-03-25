@@ -3,19 +3,15 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from starlette.requests import Request
 
+from database import UserGroupEnum
 from exceptions import TokenExpiredError, InvalidTokenError
 from exceptions.cart_item import CartItemNotInCartError, CartItemAlreadyInCartError
-from exceptions.shopping_cart import DeleteCartItemError
-from security.jwt_auth_manager import JWTAuthManagerInterface
+from exceptions.shopping_cart import DeleteCartItemError, ShoppingCartNotFoundError
 from services.shopping_cart import ShoppingCartService
 from dependencies.shopping_cart import get_shopping_cart_service
-from security.http import get_token
-from dependencies.accounts import get_jwt_auth_manager
 from schemas.shopping_cart import (
-    CartItemCreateSchema,
     CartItemDetailSchema,
     CartDetailSchema,
-    CartItemResponseSchema,
 )
 
 
@@ -23,7 +19,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/",
+    "/my-cart",
     response_model=CartDetailSchema,
     status_code=status.HTTP_200_OK,
     summary="Retrieve user's shopping cart",
@@ -69,7 +65,6 @@ async def add_to_cart(
         cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
 ) -> CartItemDetailSchema:
     cart = await cart_service.get_user_cart()
-
     try:
         response = await cart_service.add_movie_to_cart(cart.id, movie_id)
     except CartItemAlreadyInCartError:
@@ -98,7 +93,6 @@ async def remove_from_cart(
         cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
 ) -> None:
     cart = await cart_service.get_user_cart()
-
     try:
         await cart_service.remove_movie_from_cart(cart.id, movie_id)
     except CartItemNotInCartError:
@@ -113,6 +107,7 @@ async def remove_from_cart(
     summary="Remove all movies from user's cart",
     description="Clear a cart from all cart items (movies).",
     responses={
+        400: {"description": "Cart is already empty"},
         401: {"description": "Token has expired"},
         403: {"description": "Invalid Token"}
     }
@@ -136,3 +131,48 @@ async def clear_cart(
         raise HTTPException(status_code=400, detail="Cart is already empty.")
 
     await cart_service.clear_cart(cart.id)
+
+
+@router.get(
+    "/{cart_id}",
+    response_model=CartDetailSchema,
+    summary="Retrieve a user's cart as an admin",
+    description=(
+        "<h3>Allows an admin to view a specific user's shopping cart.</h3>"
+        "Admin access is required."
+    ),
+    responses={
+        403: {"description": "Access denied."},
+        401: {"description": "Unauthorized request."}
+    }
+)
+async def get_cart_admin(
+        cart_id: int,
+        cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
+) -> CartDetailSchema:
+    try:
+        user = await cart_service.user_repository.get_user_from_token()
+    except TokenExpiredError as exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(exception)
+        )
+    except InvalidTokenError as exception:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exception)
+        )
+    if (
+            not user.has_group(UserGroupEnum.ADMIN)
+            and not user.has_group(UserGroupEnum.MODERATOR)
+    ):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    try:
+        cart = await cart_service.get_cart_by_id(cart_id)
+    except ShoppingCartNotFoundError as exception:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exception)
+        )
+    return cart
