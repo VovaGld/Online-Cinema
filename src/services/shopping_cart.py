@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from database.models.shopping_cart import CartItemModel, CartModel
+from exceptions.shopping_cart import ShoppingCartNotFoundError
 from repositories.shopping_cart_rep import ShoppingCartRepository
 from repositories.cart_item_rep import CartItemRepository
 from repositories.accounts_rep import UserRepository
@@ -36,6 +37,18 @@ class ShoppingCartService:
             user_id=user.id,
             create_order_url=create_order_url if items else None,
             clear_cart_url=clear_cart_url if items else None,
+            items=items
+        )
+        return response
+
+    async def get_cart_by_id(self, cart_id: int) -> CartDetailSchema:
+        cart = await self.shopping_cart_repository.get_cart_by_id(cart_id)
+        if not cart:
+            raise ShoppingCartNotFoundError("Cart not found")
+        items = await self.get_cart_items_details(cart)
+        response = CartDetailSchema(
+            id=cart.id,
+            user_id=cart.user_id,
             items=items
         )
         return response
