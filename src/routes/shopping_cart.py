@@ -24,6 +24,7 @@ router = APIRouter()
 @router.get(
     "/",
     response_model=CartDetailSchema,
+    status_code=status.HTTP_200_OK,
     summary="Retrieve user's shopping cart",
     description=(
         "<h3>Fetch the user's shopping cart.</h3>"
@@ -39,7 +40,11 @@ async def get_cart(
         request: Request = Request,
 ) -> CartDetailSchema:
     create_order_url = str(request.url_for("create"))
-    response = await cart_service.get_user_cart(create_order_url=create_order_url)
+    clear_cart_url = str(request.url_for("clear_cart"))
+    response = await cart_service.get_user_cart(
+        create_order_url=create_order_url,
+        clear_cart_url=clear_cart_url,
+    )
     return response
 
 
@@ -99,3 +104,19 @@ async def remove_from_cart(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not in cart")
     except DeleteCartItemError:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to remove movie")
+
+
+@router.delete(
+    "/clear/",
+    status_code=status.HTTP_204_NO_CONTENT,
+    description="Clear a cart from all cart items (movies).",
+)
+async def clear_cart(
+    cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
+):
+    cart = await cart_service.get_user_cart()
+
+    if not cart.items:
+        raise HTTPException(status_code=400, detail="Cart is already empty.")
+
+    await cart_service.clear_cart(cart.id)
