@@ -116,7 +116,7 @@ async def add_to_cart(
 
 
 @router.delete(
-    "/remove/{movie_id}",
+    "/my-cart/remove/{movie_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Remove a movie from the shopping cart",
     description=(
@@ -161,7 +161,7 @@ async def remove_from_cart(
 
 
 @router.delete(
-    "/clear/",
+    "/my-cart/clear/",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Remove all movies from user's cart",
     description="Clear a cart from all cart items (movies).",
