@@ -4,7 +4,7 @@ from alembic import context
 
 from database.session import sync_postgresql_engine
 from database.models.base import Base
-from database.models import accounts, orders, shopping_cart, movies
+from database.models import accounts, orders, shopping_cart, movies, payment
 
 
 # this is the Alembic Config object, which provides

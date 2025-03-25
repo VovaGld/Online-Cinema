@@ -22,7 +22,7 @@ class PaymentService:
             cancel_url: str
     ) -> str:
         payment = self.payment_repository.create_payment(
-            user_id=order.user.id,
+            user_id=1,
             order=order,
             cancel_url=cancel_url,
             success_url=success_url
