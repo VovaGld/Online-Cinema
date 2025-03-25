@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from starlette.requests import Request
 
 from exceptions.cart_item import CartItemNotInCartError, CartItemAlreadyInCartError
 from exceptions.shopping_cart import DeleteCartItemError
@@ -35,8 +36,10 @@ router = APIRouter()
 )
 async def get_cart(
         cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
+        request: Request = Request,
 ) -> CartDetailSchema:
-    response = await cart_service.get_user_cart()
+    create_order_url = str(request.url_for("create"))
+    response = await cart_service.get_user_cart(create_order_url=create_order_url)
     return response
 
 

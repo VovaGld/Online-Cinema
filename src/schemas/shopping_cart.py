@@ -24,4 +24,5 @@ class CartItemResponseSchema(BaseModel):
 class CartDetailSchema(BaseModel):
     id: int
     user_id: int
+    create_order_url: Optional[str] = None
     items: List[CartItemDetailSchema]
