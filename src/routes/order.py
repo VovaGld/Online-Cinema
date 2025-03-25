@@ -23,10 +23,10 @@ async def create(
         request: Request = Request
 ):
     try:
-        order = await order.create_order()
+        order_ = await order.create_order()
         success_payment_url = str(request.url_for("payment_success"))
         cancel_payment_url = str(request.url_for("payment_cancel"))
-        payment_url = await payment.create_payment_session(order=order, success_url=success_payment_url,
+        payment_url = await payment.create_payment_session(order=order_, success_url=success_payment_url,
                                                            cancel_url=cancel_payment_url)
 
     except SQLAlchemyError as e:
@@ -64,7 +64,7 @@ async def get_orders(
             OrderSchema(
                 datetime=order_.created_at,
                 movies=movie_responses,
-                total_price=order_.total_price,
+                total_price=order_.total_amount,
                 status=order_.status,
                 cancel_url=str(request.url_for("cancel_order", order_id=order_.id)) if order_.status != OrderStatus.CANCELED else None
             )

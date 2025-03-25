@@ -24,7 +24,6 @@ class OrderService:
             cart_repository: ShoppingCartRepository,
             cart_item_repository: CartItemRepository,
             user_repository: UserRepository,
-            movie_repository: MovieRepository
     ):
         self.db = db
         self.order_crud = order_repository
@@ -32,7 +31,7 @@ class OrderService:
         self.cart_crud = cart_repository
         self.cart_item_crud = cart_item_repository
         self.user_crud = user_repository
-        self.movie_repository = movie_repository
+        self.movie_repository = MovieRepository(db)
 
     async def create_order(self) -> OrderModel:
         try:

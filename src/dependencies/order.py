@@ -37,7 +37,6 @@ def get_order_service(
         cart_repository: ShoppingCartRepository = Depends(get_shopping_cart_repository),
         cart_item_repository: CartItemRepository = Depends(get_shopping_cart_item_repository),
         user_repository: UserRepository = Depends(get_user_repository),
-        movie_repository: MovieRepository = MovieRepository(Depends(get_db)),
         db: AsyncSession = Depends(get_db)
 ) -> OrderService:
     return OrderService(
@@ -46,6 +45,5 @@ def get_order_service(
         order_item_repository=order_item_repository,
         cart_repository=cart_repository,
         user_repository=user_repository,
-        cart_item_repository=cart_item_repository,
-        movie_repository=movie_repository
+        cart_item_repository=cart_item_repository
     )
