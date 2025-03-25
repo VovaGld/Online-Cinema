@@ -20,6 +20,7 @@ async def payment_success(
     await payment.set_paid_status(session_id)
     payment_ = await payment.payment_repository.get_payment_by_session_id(session_id)
     await order.set_paid_status(payment_.order_id)
+    await order.add_order_to_purchased(payment_.order_id)
     return {"status": "success", "message": "Payment completed successfully"}
 
 

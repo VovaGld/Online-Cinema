@@ -1,4 +1,6 @@
 from decimal import Decimal
+
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import UserGroupEnum
@@ -36,10 +38,16 @@ class OrderService:
 
             cart_items = await self.cart_item_crud.get_all_cart_items_by_cart_id(user_cart.id)
 
-            if not cart_items:
-                raise ValueError("Cart is empty")
+            movie_ids = [
+                item.movie_id for item in cart_items
+                if not await self.user_crud.is_movie_in_purchased(
+                    user_id=user.id,
+                    movie_id=item.movie_id
+                )
+            ]
 
-            movie_ids = [item.movie_id for item in cart_items]
+            if not movie_ids:
+                raise HTTPException(status_code=400, detail="No movies in cart")
 
             order = await self.order_crud.create_order(user.id)
 
@@ -63,7 +71,6 @@ class OrderService:
     async def get_all_orders(self) -> list[OrderModel]:
         return await self.order_crud.get_all_orders()
 
-
     async def get_order_with_params(self, **kwargs) -> list[OrderModel]:
         return await self.order_crud.get_orders_with_params(**kwargs)
 
@@ -73,6 +80,8 @@ class OrderService:
     async def set_paid_status(self, order_id: int) -> None:
         await self.order_crud.set_status(order_id, "paid")
 
-    async def check_user_is_admin(self):
+    async def add_order_to_purchased(self, order_id: int) -> None:
         user = await self.user_crud.get_user_from_token()
-        return user.group == UserGroupEnum.ADMIN
+        order_items = await self.order_crud.get_order_items(order_id)
+        for order_item in order_items.order_items:
+            await self.user_crud.add_movie_to_purchased(user.id, order_item.movie_id)
