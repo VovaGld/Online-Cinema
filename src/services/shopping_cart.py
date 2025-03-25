@@ -1,15 +1,13 @@
 from typing import List
 
-from fastapi import HTTPException, status
-
 from database.models.shopping_cart import CartItemModel, CartModel
 from repositories.shopping_cart_rep import ShoppingCartRepository
 from repositories.cart_item_rep import CartItemRepository
+from repositories.accounts_rep import UserRepository
 from schemas.shopping_cart import (
     CartDetailSchema,
     CartItemDetailSchema,
 )
-from security.interfaces import JWTAuthManagerInterface
 from exceptions.cart_item import CartItemNotInCartError
 
 
@@ -18,25 +16,20 @@ class ShoppingCartService:
         self,
         shopping_cart_repository: ShoppingCartRepository,
         cart_item_repository: CartItemRepository,
+        user_repository: UserRepository,
     ) -> None:
         self.shopping_cart_repository = shopping_cart_repository
         self.cart_item_repository = cart_item_repository
+        self.user_repository = user_repository
 
-    async def get_user_cart(self, token: str, jwt_manager: JWTAuthManagerInterface) -> CartDetailSchema:
-        try:
-            payload = jwt_manager.decode_access_token(token)
-            user_id = payload.get("user_id")
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=str(e)
-            )
+    async def get_user_cart(self) -> CartDetailSchema:
+        user = await self.user_repository.get_user_from_token()
 
-        cart = await self.shopping_cart_repository.get_or_create_cart(user_id)
+        cart = await self.shopping_cart_repository.get_or_create_cart(user.id)
         items = await self.get_cart_items_details(cart)
         response = CartDetailSchema(
             id=cart.id,
-            user_id=user_id,
+            user_id=user.id,
             items=items
         )
         return response
