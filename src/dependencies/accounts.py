@@ -40,10 +40,10 @@ def get_user_repository(
 
 
 def get_s3_storage_client() -> S3StorageInterface:
-    endpoint_url = f"http://{os.getenv('MINIO_HOST')}:{os.getenv('MINIO_PORT')}"
-    access_key = os.getenv('MINIO_ROOT_USER')
-    secret_key = os.getenv('MINIO_ROOT_PASSWORD')
-    bucket_name = os.getenv('MINIO_STORAGE')
+    endpoint_url = os.getenv('S3_ENDPOINT', 'http://localhost:9000')
+    access_key = os.getenv('MINIO_ROOT_USER', 'minioadmin')
+    secret_key = os.getenv('MINIO_ROOT_PASSWORD', 'minioadmin')
+    bucket_name = os.getenv('MINIO_STORAGE', 'online-cinema-bucket')
 
     return S3StorageClient(
         endpoint_url=endpoint_url,
