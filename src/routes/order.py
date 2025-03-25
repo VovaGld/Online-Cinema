@@ -8,7 +8,6 @@ from database.models.orders import OrderStatus
 from dependencies.order import get_order_service
 from dependencies.payment import get_payment_service
 from schemas.order import OrderCreateResponseSchema, OrderListSchema
-from security.http import get_token
 from services.order_service import OrderService
 from services.payment import PaymentService
 
@@ -25,7 +24,7 @@ async def create(
         order = await order.create_order()
         success_payment_url = str(request.url_for("payment_success"))
         cancel_payment_url = str(request.url_for("payment_cancel"))
-        payment_url = payment.create_payment_session(order=order, success_url=success_payment_url, cancel_url=cancel_payment_url)
+        payment_url = await payment.create_payment_session(order=order, success_url=success_payment_url, cancel_url=cancel_payment_url)
 
         cancel_url = request.url_for("cancel_order", order_id=order.id)
     except SQLAlchemyError as e:
@@ -77,25 +76,3 @@ async def cancel_order(
 ):
     await order.set_canceled_status(order_id)
     return {"message": "Order cancelled"}
-
-
-@router.get("/success/")
-async def payment_success(
-    session_id: Optional[str] = Query(None)
-):
-    print(session_id)
-    return {"status": "success", "message": "Payment completed successfully"}
-
-
-@router.get("/cancel/")
-async def payment_cancel(
-    session_id: Optional[str] = Query(None),
-):
-    if session_id:
-        print(session_id)
-    else:
-        raise HTTPException(
-            status_code=400,
-            detail="Payment ID is required"
-        )
-    return {"status": "success", "message": "Payment completed successfully"}

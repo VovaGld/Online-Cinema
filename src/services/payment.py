@@ -1,6 +1,7 @@
 import stripe
 
 from database.models import OrderModel
+from repositories.order_rep import OrderRepository
 from repositories.payment_item_rep import PaymentItemRepository
 from repositories.payments_rep import PaymentRepository
 
@@ -9,31 +10,41 @@ class PaymentService:
             self,
             payment_repository: PaymentRepository,
             payment_item_repository: PaymentItemRepository,
+            order_repository: OrderRepository,
             stripe_secret_key: str
     ):
         self.payment_repository = payment_repository
         self.payment_item_repository = payment_item_repository
+        self.order_repository = order_repository
         stripe.api_key = stripe_secret_key
 
-    def create_payment_session(
+    async def create_payment_session(
             self,
             order: OrderModel,
             success_url: str,
             cancel_url: str
     ) -> str:
-        payment = self.payment_repository.create_payment(
-            user_id=1,
+        payment_session = self.payment_repository.create_payment_session(
             order=order,
-            cancel_url=cancel_url,
-            success_url=success_url
+            success_url=success_url,
+            cancel_url=cancel_url
         )
-        return payment.session_url
+        payment = await self.payment_repository.create_payment(
+            order=order,
+            user_id=1,
+            payment_session=payment_session
+        )
+        order_items = await self.order_repository.get_order_items(order.id)
+        print("order", order)
+        print("order items", order_items.order_items)
+        await self.payment_item_repository.create_payment_items(payment.id, order_items.order_items)
+        return payment_session.url
 
-    async def set_paid_status(self, payment_id: int):
-        await self.payment_repository.set_status(payment_id, "paid")
+    async def set_paid_status(self, session_id: str):
+        await self.payment_repository.set_status(session_id, "paid")
 
-    async def set_failed_status(self, payment_id: int):
-        await self.payment_repository.set_status(payment_id, "failed")
+    async def set_failed_status(self, session_id: str):
+        await self.payment_repository.set_status(session_id, "failed")
 
-    async def set_canceled_status(self, payment_id: int):
-        await self.payment_repository.set_status(payment_id, "canceled")
+    async def set_canceled_status(self, session_id: str):
+        await self.payment_repository.set_status(session_id, "canceled")
