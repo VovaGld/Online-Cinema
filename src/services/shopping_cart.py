@@ -22,7 +22,11 @@ class ShoppingCartService:
         self.cart_item_repository = cart_item_repository
         self.user_repository = user_repository
 
-    async def get_user_cart(self, create_order_url: Optional[str] = None) -> CartDetailSchema:
+    async def get_user_cart(
+        self,
+        create_order_url: Optional[str] = None,
+        clear_cart_url: Optional[str] = None,
+    ) -> CartDetailSchema:
         user = await self.user_repository.get_user_from_token()
 
         cart = await self.shopping_cart_repository.get_or_create_cart(user.id)
@@ -31,6 +35,7 @@ class ShoppingCartService:
             id=cart.id,
             user_id=user.id,
             create_order_url=create_order_url if items else None,
+            clear_cart_url=clear_cart_url if items else None,
             items=items
         )
         return response
