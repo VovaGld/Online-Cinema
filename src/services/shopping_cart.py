@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from database.models.shopping_cart import CartItemModel, CartModel
+from exceptions.shopping_cart import ShoppingCartNotFoundError
 from repositories.shopping_cart_rep import ShoppingCartRepository
 from repositories.cart_item_rep import CartItemRepository
 from repositories.accounts_rep import UserRepository
@@ -40,6 +41,18 @@ class ShoppingCartService:
         )
         return response
 
+    async def get_cart_by_id(self, cart_id: int) -> CartDetailSchema:
+        cart = await self.shopping_cart_repository.get_cart_by_id(cart_id)
+        if not cart:
+            raise ShoppingCartNotFoundError("Cart not found")
+        items = await self.get_cart_items_details(cart)
+        response = CartDetailSchema(
+            id=cart.id,
+            user_id=cart.user_id,
+            items=items
+        )
+        return response
+
     async def get_cart_items_details(self, cart: CartModel) -> List[CartItemDetailSchema]:
         items = await self.cart_item_repository.get_all_cart_items_by_cart_id(cart.id)
 
@@ -53,7 +66,7 @@ class ShoppingCartService:
                 release_year=item.movie.year,
                 warning=(
                     "Movie already purchased. It will be removed from your order"
-                    if self.user_repository.is_movie_in_purchased(cart.user_id, item.movie_id)
+                    if await self.user_repository.is_movie_in_purchased(cart.user_id, item.movie_id)
                     else None
                 ),
             )
@@ -75,7 +88,7 @@ class ShoppingCartService:
         cart = await self.shopping_cart_repository.get_or_create_cart(user_id)
         return cart
 
-    async def add_movie_to_cart(self, cart: CartModel, movie_id) -> CartItemDetailSchema:
+    async def add_movie_to_cart(self, cart: CartDetailSchema, movie_id) -> CartItemDetailSchema:
         new_item = await self.cart_item_repository.create_cart_item(cart.id, movie_id)
         warning = None
         if await self.user_repository.is_movie_in_purchased(cart.user_id, movie_id):

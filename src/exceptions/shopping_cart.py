@@ -12,3 +12,7 @@ class AddCartItemError(ShoppingCartException):
 
 class DeleteCartItemError(ShoppingCartException):
     pass
+
+
+class ShoppingCartNotFoundError(ShoppingCartException):
+    pass
