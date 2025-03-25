@@ -12,27 +12,22 @@ class PaymentRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_payment_by_id(self, payment_id: int) -> Optional[PaymentModel]:
-        result = await self.session.execute(select(PaymentModel).where(PaymentModel.id == payment_id))
+    async def get_payment_by_session_id(self, session_id: str) -> Optional[PaymentModel]:
+        result = await self.session.execute(select(PaymentModel).where(PaymentModel.session_id == session_id))
         return result.scalars().first()
 
-    def create_payment(self, user_id: int, order: OrderModel, success_url: str, cancel_url: str) -> PaymentModel:
+    async def create_payment(self, user_id: int, order: OrderModel, payment_session: Session) -> PaymentModel:
         try:
-            new_session = self.create_payment_session(
-                order=order,
-                success_url=success_url,
-                cancel_url=cancel_url
-            )
             new_payment = PaymentModel(
                 user_id=user_id,
                 order_id=order.id,
                 amount=order.total_amount,
-                session_id=new_session.id,
-                session_url=new_session.url
+                session_id=payment_session.id,
+                session_url=payment_session.url
             )
             self.session.add(new_payment)
-            self.session.commit()
-            self.session.refresh(new_payment)
+            await self.session.commit()
+            await self.session.refresh(new_payment)
             return new_payment
         except stripe.error.StripeError as e:
             print(f"Stripe error: {e}")
@@ -42,6 +37,7 @@ class PaymentRepository:
     def create_payment_session(self, order: OrderModel, success_url, cancel_url) -> Session:
         success_url = success_url + "?session_id={CHECKOUT_SESSION_ID}"
         cancel_url = cancel_url + "?session_id={CHECKOUT_SESSION_ID}"
+        print(success_url)
 
         new_session = stripe.checkout.Session.create(
             payment_method_types=["card"],
@@ -62,8 +58,8 @@ class PaymentRepository:
 
         return new_session
 
-    async def set_status(self, payment_id, status: str):
-        payment = await self.get_payment_by_id(payment_id)
+    async def set_status(self, session_id: str, status: str):
+        payment = await self.get_payment_by_session_id(session_id)
         if status == "paid":
             payment.status = PaymentStatus.COMPLETED
         elif status == "failed":
