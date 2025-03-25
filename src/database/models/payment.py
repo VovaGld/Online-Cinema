@@ -6,7 +6,6 @@ from sqlalchemy import Column, String, ForeignKey, Enum, DECIMAL, DateTime, func
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 import enum
 
-from database.models import OrderItemModel
 from database.models.base import Base
 
 
