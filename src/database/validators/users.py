@@ -1,18 +1,6 @@
 import re
 
 
-def validate_username(username: str) -> None:
-    if re.search(r'^[A-Za-z_]*$', username) is None:
-        raise ValueError(f'{username} contains non-english letters or characters other than underscore')
-    if username.startswith("_") or username.endswith("_"):
-        raise ValueError(f'{username} cannot start or end with an underscore')
-
-
-def validate_name(name: str):
-    if re.search(r'^[A-Za-z]*$', name) is None:
-        raise ValueError(f'{name} contains non-english letters')
-
-
 def validate_password_strength(password: str) -> None:
     if len(password) < 8:
         raise ValueError("Password must contain at least 8 characters.")
