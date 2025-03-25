@@ -35,10 +35,8 @@ router = APIRouter()
 )
 async def get_cart(
         cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
-        token: Annotated[str, Depends(get_token)],
-        jwt_manager: Annotated[JWTAuthManagerInterface, Depends(get_jwt_auth_manager)],
 ) -> CartDetailSchema:
-    response = await cart_service.get_user_cart(token, jwt_manager)
+    response = await cart_service.get_user_cart()
     return response
 
 
@@ -60,10 +58,8 @@ async def get_cart(
 async def add_to_cart(
         movie_id: int,
         cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
-        token: Annotated[str, Depends(get_token)],
-        jwt_manager: Annotated[JWTAuthManagerInterface, Depends(get_jwt_auth_manager)],
 ) -> CartItemDetailSchema:
-    cart = await cart_service.get_user_cart(token, jwt_manager)
+    cart = await cart_service.get_user_cart()
 
     try:
         response = await cart_service.add_movie_to_cart(cart.id, movie_id)
@@ -91,10 +87,8 @@ async def add_to_cart(
 async def remove_from_cart(
         movie_id: int,
         cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
-        token: Annotated[str, Depends(get_token)],
-        jwt_manager: Annotated[JWTAuthManagerInterface, Depends(get_jwt_auth_manager)]
 ) -> None:
-    cart = await cart_service.get_user_cart(token, jwt_manager)
+    cart = await cart_service.get_user_cart()
 
     try:
         await cart_service.remove_movie_from_cart(cart.id, movie_id)
