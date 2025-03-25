@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from starlette.requests import Request
 
+from exceptions import TokenExpiredError, InvalidTokenError
 from exceptions.cart_item import CartItemNotInCartError, CartItemAlreadyInCartError
 from exceptions.shopping_cart import DeleteCartItemError
 from security.jwt_auth_manager import JWTAuthManagerInterface
@@ -109,13 +110,28 @@ async def remove_from_cart(
 @router.delete(
     "/clear/",
     status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove all movies from user's cart",
     description="Clear a cart from all cart items (movies).",
+    responses={
+        401: {"description": "Token has expired"},
+        403: {"description": "Invalid Token"}
+    }
 )
 async def clear_cart(
     cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
 ):
-    cart = await cart_service.get_user_cart()
-
+    try:
+        cart = await cart_service.get_user_cart()
+    except TokenExpiredError as exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(exception)
+        )
+    except InvalidTokenError as exception:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exception)
+        )
     if not cart.items:
         raise HTTPException(status_code=400, detail="Cart is already empty.")
 
