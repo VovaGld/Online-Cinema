@@ -30,7 +30,7 @@ class ShoppingCartService:
         response = CartDetailSchema(
             id=cart.id,
             user_id=user.id,
-            create_order_url=create_order_url if cart else None,
+            create_order_url=create_order_url if items else None,
             items=items
         )
         return response
