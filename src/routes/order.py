@@ -14,8 +14,6 @@ from services.payment import PaymentService
 
 router = APIRouter()
 
-from repositories import payments_rep
-
 @router.post("/create/")
 async def create(
         order: OrderService = Depends(get_order_service),
@@ -24,6 +22,7 @@ async def create(
 ) -> OrderCreateResponseSchema:
     try:
         order = await order.create_order()
+        payment_url = await payment.create_payment_session(order=order)
         cancel_url = request.url_for("cancel_order", order_id=order.id)
     except SQLAlchemyError as e:
         raise e
@@ -31,7 +30,7 @@ async def create(
         order_id=order.id,
         total_price=order.total_amount,
         status=order.status,
-        payment_url="some url",
+        payment_url=payment_url,
         cancel_url=str(cancel_url)
     )
 
@@ -74,3 +73,8 @@ async def cancel_order(
 ):
     await order.set_canceled_status(order_id)
     return {"message": "Order cancelled"}
+
+
+@router.get("/test/")
+async def test():
+    return {"message": "test"}

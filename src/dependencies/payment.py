@@ -11,7 +11,7 @@ from services.payment import PaymentService
 def get_payment_repository(
         session: AsyncSession = Depends(get_db)
 ) -> PaymentRepository:
-    return PaymentRepository(db=session)
+    return PaymentRepository(session=session)
 
 def get_payment_service(
         payment_repository: PaymentRepository = Depends(get_payment_repository)
