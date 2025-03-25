@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, Request, Query
+from fastapi import APIRouter, Depends, Request, Query, HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 from typing_extensions import Optional
 
@@ -14,6 +14,7 @@ from services.payment import PaymentService
 
 router = APIRouter()
 
+
 @router.post("/create/")
 async def create(
         order: OrderService = Depends(get_order_service),
@@ -22,7 +23,10 @@ async def create(
 ) -> OrderCreateResponseSchema:
     try:
         order = await order.create_order()
-        payment_url = await payment.create_payment_session(order=order)
+        success_payment_url = str(request.url_for("payment_success"))
+        cancel_payment_url = str(request.url_for("payment_cancel"))
+        payment_url = payment.create_payment_session(order=order, success_url=success_payment_url, cancel_url=cancel_payment_url)
+
         cancel_url = request.url_for("cancel_order", order_id=order.id)
     except SQLAlchemyError as e:
         raise e
@@ -75,6 +79,23 @@ async def cancel_order(
     return {"message": "Order cancelled"}
 
 
-@router.get("/test/")
-async def test():
-    return {"message": "test"}
+@router.get("/success/")
+async def payment_success(
+    session_id: Optional[str] = Query(None)
+):
+    print(session_id)
+    return {"status": "success", "message": "Payment completed successfully"}
+
+
+@router.get("/cancel/")
+async def payment_cancel(
+    session_id: Optional[str] = Query(None),
+):
+    if session_id:
+        print(session_id)
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Payment ID is required"
+        )
+    return {"status": "success", "message": "Payment completed successfully"}
