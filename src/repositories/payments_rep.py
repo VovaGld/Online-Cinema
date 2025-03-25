@@ -16,8 +16,27 @@ class PaymentRepository:
         result = await self.session.execute(select(PaymentModel).where(PaymentModel.id == payment_id))
         return result.scalars().first()
 
-    async def create_payment(self, user_id: int) -> PaymentModel:
-        pass
+    def create_payment(self, user_id: int, order: OrderModel, success_url: str, cancel_url: str) -> PaymentModel:
+        try:
+            new_session = self.create_payment_session(
+                order=order,
+                success_url=success_url,
+                cancel_url=cancel_url
+            )
+            new_payment = PaymentModel(
+                user_id=user_id,
+                order_id=order.id,
+                amount=order.total_amount,
+                session_id=new_session.id,
+                session_url=new_session.url
+            )
+            self.session.add(new_payment)
+            self.session.commit()
+            self.session.refresh(new_payment)
+            return new_payment
+        except stripe.error.StripeError as e:
+            print(f"Stripe error: {e}")
+            raise e
 
 
     def create_payment_session(self, order: OrderModel, success_url, cancel_url) -> Session:
