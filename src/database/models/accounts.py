@@ -12,7 +12,7 @@ from sqlalchemy import (
     func,
     Text,
     Date,
-    UniqueConstraint
+    UniqueConstraint, Table, Column,
 )
 from sqlalchemy.orm import (
     Mapped,
@@ -47,6 +47,18 @@ class UserGroupModel(Base):
 
     def __repr__(self):
         return f"<UserGroupModel(id={self.id}, name={self.name})>"
+
+
+UserPurchasedMoviesModel = Table(
+    "user_purchased_movies",
+    Base.metadata,
+    Column(
+        "movie_id",
+        ForeignKey("movies.id", ondelete="CASCADE"), primary_key=True, nullable=False),
+    Column(
+        "user_id",
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, nullable=False),
+)
 
 
 class UserModel(Base):
@@ -92,6 +104,11 @@ class UserModel(Base):
         "UserProfileModel",
         back_populates="user",
         cascade="all, delete-orphan"
+    )
+
+    purchased_movies: Mapped[list["MovieModel"]] = relationship(
+        "MovieModel",
+        secondary=UserPurchasedMoviesModel,
     )
 
     def __repr__(self):
