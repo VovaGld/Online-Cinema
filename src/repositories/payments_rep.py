@@ -6,7 +6,7 @@ from sqlalchemy import select
 from stripe.checkout import Session
 
 from database.models import OrderModel
-from database.models.payment import PaymentModel, PaymentStatus
+from src.database.models.payment import PaymentModel, PaymentStatus
 
 class PaymentRepository:
     def __init__(self, session: AsyncSession):
