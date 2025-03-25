@@ -17,21 +17,21 @@ from dependencies.shopping_cart import (
 )
 
 
-def _get_order_repository(
+def get_order_repository(
         session: AsyncSession = Depends(get_db),
 ):
     return OrderRepository(db=session)
 
 
-def _get_order_item_repository(
+def get_order_item_repository(
         session: AsyncSession = Depends(get_db),
 ):
     return OrderItemRepository(db=session)
 
 
 def get_order_service(
-        order_repository: OrderRepository = Depends(_get_order_repository),
-        order_item_repository: OrderItemRepository = Depends(_get_order_item_repository),
+        order_repository: OrderRepository = Depends(get_order_repository),
+        order_item_repository: OrderItemRepository = Depends(get_order_item_repository),
         cart_repository: ShoppingCartRepository = Depends(get_shopping_cart_repository),
         cart_item_repository: CartItemRepository = Depends(get_shopping_cart_item_repository),
         user_repository: UserRepository = Depends(get_user_repository),

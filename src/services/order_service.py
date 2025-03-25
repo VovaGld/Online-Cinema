@@ -45,6 +45,8 @@ class OrderService:
 
             order_items = await self.order_item_crud.create_order_items(order.id, movie_ids)
 
+            order.order_items = order_items
+
             total_price = Decimal(sum(item.price_at_order for item in order_items))
             await self.order_crud.update_total_price(order, total_price)
 
