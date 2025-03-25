@@ -48,7 +48,7 @@ class OrderService:
             total_price = Decimal(sum(item.price_at_order for item in order_items))
             await self.order_crud.update_total_price(order, total_price)
 
-            # await self.cart_item_crud.delete_all_cart_items(user_cart.id)
+            await self.cart_item_crud.delete_all_cart_items(user_cart.id)
 
             return order
         except Exception as e:
