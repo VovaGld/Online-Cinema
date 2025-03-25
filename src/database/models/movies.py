@@ -124,7 +124,7 @@ class MovieModel(Base):
     __tablename__ = "movies"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    uuid: Mapped[UUID] = mapped_column(String, unique=True, default=uuid4)
+    uuid: Mapped[UUID] = mapped_column(unique=True, default=uuid4)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     year: Mapped[int] = mapped_column(nullable=False)
     time: Mapped[int] = mapped_column(nullable=False)

@@ -38,7 +38,10 @@ class MovieRepository:
         )
         self.db.add(db_movie)
         await self.db.commit()
-        await self.db.refresh(db_movie)
+        await self.db.refresh(
+            db_movie,
+            ["genres", "stars", "directors", "certification", "comments"]
+        )
         return db_movie
 
     async def get(self, movie_id: int):
