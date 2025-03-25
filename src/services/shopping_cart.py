@@ -53,7 +53,7 @@ class ShoppingCartService:
                 release_year=item.movie.year,
                 warning=(
                     "Movie already purchased. It will be removed from your order"
-                    if self.user_repository.is_movie_in_purchased(cart.user_id, item.movie_id)
+                    if await self.user_repository.is_movie_in_purchased(cart.user_id, item.movie_id)
                     else None
                 ),
             )
@@ -75,7 +75,7 @@ class ShoppingCartService:
         cart = await self.shopping_cart_repository.get_or_create_cart(user_id)
         return cart
 
-    async def add_movie_to_cart(self, cart: CartModel, movie_id) -> CartItemDetailSchema:
+    async def add_movie_to_cart(self, cart: CartDetailSchema, movie_id) -> CartItemDetailSchema:
         new_item = await self.cart_item_repository.create_cart_item(cart.id, movie_id)
         warning = None
         if await self.user_repository.is_movie_in_purchased(cart.user_id, movie_id):

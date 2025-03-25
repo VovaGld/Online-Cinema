@@ -4,18 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from starlette.requests import Request
 
 from exceptions import TokenExpiredError, InvalidTokenError
-from exceptions.cart_item import CartItemNotInCartError, CartItemAlreadyInCartError
+from exceptions.cart_item import CartItemNotInCartError, CartItemAlreadyInCartError, AddCartItemError
 from exceptions.shopping_cart import DeleteCartItemError
-from security.jwt_auth_manager import JWTAuthManagerInterface
 from services.shopping_cart import ShoppingCartService
 from dependencies.shopping_cart import get_shopping_cart_service
-from security.http import get_token
-from dependencies.accounts import get_jwt_auth_manager
 from schemas.shopping_cart import (
-    CartItemCreateSchema,
     CartItemDetailSchema,
     CartDetailSchema,
-    CartItemResponseSchema,
 )
 
 
@@ -61,7 +56,8 @@ async def get_cart(
     responses={
         404: {"description": "User or movie not found."},
         400: {"description": "Movie already in cart."},
-        401: {"description": "Unauthorized request."}
+        401: {"description": "Unauthorized request."},
+        500: {"description": "Internal server error"}
     }
 )
 async def add_to_cart(
@@ -76,6 +72,11 @@ async def add_to_cart(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Movie already in cart."
+        )
+    except AddCartItemError as exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
         )
     return response
 
