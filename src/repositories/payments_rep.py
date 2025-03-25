@@ -6,17 +6,17 @@ from sqlalchemy import select
 from stripe.checkout import Session
 
 from database.models import OrderModel
-from src.database.models.payment import Payment, PaymentStatus
+from src.database.models.payment import PaymentModel, PaymentStatus
 
 class PaymentRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_payment_by_id(self, payment_id: int) -> Optional[Payment]:
-        result = await self.session.execute(select(Payment).where(Payment.id == payment_id))
+    async def get_payment_by_id(self, payment_id: int) -> Optional[PaymentModel]:
+        result = await self.session.execute(select(PaymentModel).where(PaymentModel.id == payment_id))
         return result.scalars().first()
 
-    async def create_payment(self, user_id: int) -> Payment:
+    async def create_payment(self, user_id: int) -> PaymentModel:
         pass
 
 
