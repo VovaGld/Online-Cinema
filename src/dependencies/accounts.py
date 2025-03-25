@@ -5,6 +5,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
+from notifications import EmailSenderInterface, EmailSender
 from repositories.accounts_rep import UserRepository
 from security.http import get_token
 from security.interfaces import JWTAuthManagerInterface
@@ -50,4 +51,18 @@ def get_s3_storage_client() -> S3StorageInterface:
         access_key=access_key,
         secret_key=secret_key,
         bucket_name=bucket_name
+    )
+
+def get_accounts_email_notificator() -> EmailSenderInterface:
+    email_host = os.getenv("EMAIL_HOST", "localhost")
+    email_port = int(os.getenv("EMAIL_PORT", 25))
+    email_user = os.getenv("EMAIL_HOST_USER", "testuser")
+    email_password = os.getenv("EMAIL_HOST_PASSWORD", "test_password")
+    email_use_tls = os.getenv("EMAIL_USE_TLS", "False").lower() == "true"
+    return EmailSender(
+        hostname=email_host,
+        port=email_port,
+        email=email_user,
+        password=email_password,
+        use_tls=email_use_tls,
     )
