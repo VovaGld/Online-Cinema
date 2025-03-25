@@ -4,9 +4,11 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import UserGroupEnum
+from database.models import MovieModel
 from database.models.orders import OrderModel
 from repositories.accounts_rep import UserRepository
 from repositories.cart_item_rep import CartItemRepository
+from repositories.movies_rep.movie import MovieRepository
 from repositories.order_item_rep import OrderItemRepository
 from repositories.order_rep import OrderRepository
 from repositories.shopping_cart_rep import ShoppingCartRepository
@@ -22,7 +24,7 @@ class OrderService:
             cart_repository: ShoppingCartRepository,
             cart_item_repository: CartItemRepository,
             user_repository: UserRepository,
-
+            movie_repository: MovieRepository
     ):
         self.db = db
         self.order_crud = order_repository
@@ -30,6 +32,7 @@ class OrderService:
         self.cart_crud = cart_repository
         self.cart_item_crud = cart_item_repository
         self.user_crud = user_repository
+        self.movie_repository = movie_repository
 
     async def create_order(self) -> OrderModel:
         try:
@@ -73,6 +76,19 @@ class OrderService:
 
     async def get_order_with_params(self, **kwargs) -> list[OrderModel]:
         return await self.order_crud.get_orders_with_params(**kwargs)
+
+    async def get_movies_from_orders(self, order_id: int) -> list[dict]:
+        movie_list = []
+        order_items = await self.order_crud.get_order_items(order_id)
+        for item in order_items.order_items:
+            movie_list.append(
+                await self.movie_repository.get(item.movie_id)
+            )
+        return [
+            {"id": movie.id, "name": movie.name}
+            for movie in movie_list
+        ]
+
 
     async def set_canceled_status(self, order_id: int) -> None:
         await self.order_crud.set_status(order_id, "canceled")

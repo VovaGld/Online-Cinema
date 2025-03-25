@@ -1,10 +1,12 @@
 from fastapi import Depends
+from requests import session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.session import get_db
 from dependencies.accounts import get_user_repository
 from repositories.accounts_rep import UserRepository
 from repositories.cart_item_rep import CartItemRepository
+from repositories.movies_rep.movie import MovieRepository
 from repositories.order_item_rep import OrderItemRepository
 
 from repositories.order_rep import OrderRepository
@@ -35,6 +37,7 @@ def get_order_service(
         cart_repository: ShoppingCartRepository = Depends(get_shopping_cart_repository),
         cart_item_repository: CartItemRepository = Depends(get_shopping_cart_item_repository),
         user_repository: UserRepository = Depends(get_user_repository),
+        movie_repository: MovieRepository = MovieRepository(Depends(get_db)),
         db: AsyncSession = Depends(get_db)
 ) -> OrderService:
     return OrderService(
@@ -43,5 +46,6 @@ def get_order_service(
         order_item_repository=order_item_repository,
         cart_repository=cart_repository,
         user_repository=user_repository,
-        cart_item_repository=cart_item_repository
+        cart_item_repository=cart_item_repository,
+        movie_repository=movie_repository
     )

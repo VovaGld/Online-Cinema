@@ -1,7 +1,7 @@
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import OrderItemModel, PaymentItemModel
+from database.models import OrderItemModel, PaymentItemModel, MovieModel
 
 
 class PaymentItemRepository:
