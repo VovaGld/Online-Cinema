@@ -12,6 +12,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
+from database.models import OrderItemModel
 from database.models.base import Base
 
 
@@ -109,6 +110,16 @@ class CertificationModel(Base):
         return f"<Certification(name='{self.name}')>"
 
 
+class CommentModel(Base):
+    __tablename__ = "comments"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    text: Mapped[str] = mapped_column(nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    movie_id: Mapped[int] = mapped_column(ForeignKey("movies.id"))
+    movie: Mapped["MovieModel"] = relationship(back_populates="comments")
+
+
 class MovieModel(Base):
     __tablename__ = "movies"
 
@@ -146,8 +157,13 @@ class MovieModel(Base):
         "OrderItemModel", back_populates="movie"
     )
 
+    comments: Mapped[list["CommentModel"]] = relationship(back_populates="movie")
+
     certification_id: Mapped[int] = mapped_column(ForeignKey("certifications.id"))
     certification: Mapped["CertificationModel"] = relationship(back_populates="movies")
+    likes: Mapped[Optional[int]] = mapped_column(nullable=True)
+    dislikes: Mapped[Optional[int]] = mapped_column(nullable=True)
+    rate: Mapped[Optional[float]] = mapped_column(nullable=True)
 
     __table_args__ = (
         UniqueConstraint("name", "year", "time", name="unique_movie_constraint"),

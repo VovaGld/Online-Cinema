@@ -1,5 +1,10 @@
-from routes.movies import router as movie_router
+from routes.movies.movie import router as movie_router
+from routes.movies.certification import router as certification_router
+from routes.movies.star import router as star_router
+from routes.movies.director import router as director_router
+from routes.movies.genre import router as genre_router
 from routes.accounts import router as accounts_router
 from routes.order import router as order_router
 from routes.payments import router as payments_router
 from routes.shopping_cart import router as shopping_cart_router
+from routes.profiles import router as profiles_router

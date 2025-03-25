@@ -1,6 +1,10 @@
 from database.validators.users import (
-    validate_name,
     validate_email,
-    validate_username,
     validate_password_strength
+)
+from database.validators.profile import (
+    validate_name,
+    validate_image,
+    validate_gender,
+    validate_birth_date
 )
