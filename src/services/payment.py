@@ -2,7 +2,7 @@ import stripe
 
 from database.models import OrderModel
 from repositories.payment_item_rep import PaymentItemRepository
-from src.repositories.payments_rep import PaymentRepository
+from repositories.payments_rep import PaymentRepository
 
 class PaymentService:
     def __init__(

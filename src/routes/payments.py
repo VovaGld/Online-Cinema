@@ -7,12 +7,12 @@ import stripe
 import logging
 import json
 
-from src.database.session import get_db
-from src.repositories.payments_rep import PaymentRepository
-from src.schemas.payment import PaymentCreate, PaymentResponse
-from src.services.payment import PaymentService
-from src.security.jwt_auth_manager import JWTAuthManager
-from src.exceptions import InvalidTokenError, TokenExpiredError
+from database.session import get_db
+from repositories.payments_rep import PaymentRepository
+from schemas.payment import PaymentCreate, PaymentResponse
+from services.payment import PaymentService
+from security.jwt_auth_manager import JWTAuthManager
+from exceptions import InvalidTokenError, TokenExpiredError
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
