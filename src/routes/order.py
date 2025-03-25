@@ -6,16 +6,20 @@ from typing_extensions import Optional
 
 from database.models.orders import OrderStatus
 from dependencies.order import get_order_service
+from dependencies.payment import get_payment_service
 from schemas.order import OrderCreateResponseSchema, OrderListSchema
 from security.http import get_token
 from services.order_service import OrderService
+from services.payment import PaymentService
 
 router = APIRouter()
 
+from repositories import payments_rep
 
 @router.post("/create/")
 async def create(
         order: OrderService = Depends(get_order_service),
+        payment: PaymentService = Depends(get_payment_service),
         request: Request = Request
 ) -> OrderCreateResponseSchema:
     try:

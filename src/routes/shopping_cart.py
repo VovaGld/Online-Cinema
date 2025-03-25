@@ -1,7 +1,9 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from starlette.requests import Request
 
+from exceptions import TokenExpiredError, InvalidTokenError
 from exceptions.cart_item import CartItemNotInCartError, CartItemAlreadyInCartError
 from exceptions.shopping_cart import DeleteCartItemError
 from security.jwt_auth_manager import JWTAuthManagerInterface
@@ -23,6 +25,7 @@ router = APIRouter()
 @router.get(
     "/",
     response_model=CartDetailSchema,
+    status_code=status.HTTP_200_OK,
     summary="Retrieve user's shopping cart",
     description=(
         "<h3>Fetch the user's shopping cart.</h3>"
@@ -35,10 +38,14 @@ router = APIRouter()
 )
 async def get_cart(
         cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
-        token: Annotated[str, Depends(get_token)],
-        jwt_manager: Annotated[JWTAuthManagerInterface, Depends(get_jwt_auth_manager)],
+        request: Request = Request,
 ) -> CartDetailSchema:
-    response = await cart_service.get_user_cart(token, jwt_manager)
+    create_order_url = str(request.url_for("create"))
+    clear_cart_url = str(request.url_for("clear_cart"))
+    response = await cart_service.get_user_cart(
+        create_order_url=create_order_url,
+        clear_cart_url=clear_cart_url,
+    )
     return response
 
 
@@ -60,10 +67,8 @@ async def get_cart(
 async def add_to_cart(
         movie_id: int,
         cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
-        token: Annotated[str, Depends(get_token)],
-        jwt_manager: Annotated[JWTAuthManagerInterface, Depends(get_jwt_auth_manager)],
 ) -> CartItemDetailSchema:
-    cart = await cart_service.get_user_cart(token, jwt_manager)
+    cart = await cart_service.get_user_cart()
 
     try:
         response = await cart_service.add_movie_to_cart(cart.id, movie_id)
@@ -91,10 +96,8 @@ async def add_to_cart(
 async def remove_from_cart(
         movie_id: int,
         cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
-        token: Annotated[str, Depends(get_token)],
-        jwt_manager: Annotated[JWTAuthManagerInterface, Depends(get_jwt_auth_manager)]
 ) -> None:
-    cart = await cart_service.get_user_cart(token, jwt_manager)
+    cart = await cart_service.get_user_cart()
 
     try:
         await cart_service.remove_movie_from_cart(cart.id, movie_id)
@@ -102,3 +105,34 @@ async def remove_from_cart(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not in cart")
     except DeleteCartItemError:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to remove movie")
+
+
+@router.delete(
+    "/clear/",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove all movies from user's cart",
+    description="Clear a cart from all cart items (movies).",
+    responses={
+        401: {"description": "Token has expired"},
+        403: {"description": "Invalid Token"}
+    }
+)
+async def clear_cart(
+    cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
+):
+    try:
+        cart = await cart_service.get_user_cart()
+    except TokenExpiredError as exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(exception)
+        )
+    except InvalidTokenError as exception:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exception)
+        )
+    if not cart.items:
+        raise HTTPException(status_code=400, detail="Cart is already empty.")
+
+    await cart_service.clear_cart(cart.id)
