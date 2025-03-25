@@ -1,7 +1,7 @@
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import OrderItemModel
+from database.models import OrderItemModel, PaymentItemModel
 
 
 class PaymentItemRepository:
@@ -12,7 +12,6 @@ class PaymentItemRepository:
         try:
             payment_items = []
             for item in order_items:
-
                 payment_items.append(
                     PaymentItemModel(
                         payment_id=payment_id,
