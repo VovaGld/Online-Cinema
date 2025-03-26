@@ -2,6 +2,7 @@ from typing import List, Optional
 from sqlalchemy import select, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from database.models.orders import OrderModel, OrderStatus
 
@@ -23,6 +24,12 @@ class OrderRepository:
         result = await self.db.execute(select(OrderModel).filter_by(id=order_id))
         return result.scalars().first()
 
+    async def get_order_items(self, order_id: int) -> Optional[OrderModel]:
+        result = await self.db.execute(
+            select(OrderModel).options(joinedload(OrderModel.order_items)).filter_by(id=order_id)
+        )
+        return result.scalars().first()
+
     async def get_orders_with_params(self, **kwargs) -> List[OrderModel]:
         query = select(OrderModel)
         if kwargs.get("status"):
@@ -40,7 +47,7 @@ class OrderRepository:
             order = OrderModel(user_id=user_id)
             self.db.add(order)
             await self.db.commit()
-            await self.db.refresh(order)
+            await self.db.refresh(order, attribute_names=["order_items"])
             return order
         except SQLAlchemyError as e:
             await self.db.rollback()

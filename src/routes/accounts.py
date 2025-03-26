@@ -15,8 +15,9 @@ from database import (
 )
 from database.models import ActivationTokenModel
 from database.models.accounts import PasswordResetTokenModel
-from dependencies.accounts import get_jwt_auth_manager
+from dependencies.accounts import get_jwt_auth_manager, get_accounts_email_notificator
 from exceptions import BaseSecurityError
+from notifications import EmailSenderInterface
 
 from schemas import (
     UserRegistrationResponseSchema,
@@ -61,6 +62,7 @@ router = APIRouter()
 async def register_user(
         user_data: UserRegistrationRequestSchema,
         db: AsyncSession = Depends(get_db),
+        email_sender: EmailSenderInterface = Depends(get_accounts_email_notificator),
 ) -> UserRegistrationResponseSchema:
     stmt = select(UserModel).where(UserModel.email == user_data.email)
     result = await db.execute(stmt)
@@ -106,6 +108,14 @@ async def register_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred during user creation."
         ) from e
+    else:
+
+        activation_token = activation_token.token
+
+        await email_sender.send_activation_email(
+            new_user.email,
+            activation_token,
+        )
 
     return UserRegistrationResponseSchema.model_validate(new_user)
 
@@ -350,6 +360,7 @@ async def refresh_access_token(
 async def request_password_reset_token(
         data: PasswordResetRequestSchema,
         db: AsyncSession = Depends(get_db),
+        email_sender: EmailSenderInterface = Depends(get_accounts_email_notificator)
 ) -> MessageResponseSchema:
     stmt = select(UserModel).filter_by(email=data.email)
     result = await db.execute(stmt)
@@ -366,6 +377,11 @@ async def request_password_reset_token(
     db.add(reset_token)
     await db.commit()
 
+    reset_token_complete = reset_token.token
+    await email_sender.send_password_reset_email(
+        str(data.email),
+        reset_token_complete
+    )
 
     return MessageResponseSchema(
         message="If you are registered, you will receive an email with instructions."

@@ -1,15 +1,14 @@
-from typing import List
-
-from fastapi import HTTPException, status
+from typing import List, Optional
 
 from database.models.shopping_cart import CartItemModel, CartModel
+from exceptions.shopping_cart import ShoppingCartNotFoundError
 from repositories.shopping_cart_rep import ShoppingCartRepository
 from repositories.cart_item_rep import CartItemRepository
+from repositories.accounts_rep import UserRepository
 from schemas.shopping_cart import (
     CartDetailSchema,
     CartItemDetailSchema,
 )
-from security.interfaces import JWTAuthManagerInterface
 from exceptions.cart_item import CartItemNotInCartError
 
 
@@ -18,25 +17,38 @@ class ShoppingCartService:
         self,
         shopping_cart_repository: ShoppingCartRepository,
         cart_item_repository: CartItemRepository,
+        user_repository: UserRepository,
     ) -> None:
         self.shopping_cart_repository = shopping_cart_repository
         self.cart_item_repository = cart_item_repository
+        self.user_repository = user_repository
 
-    async def get_user_cart(self, token: str, jwt_manager: JWTAuthManagerInterface) -> CartDetailSchema:
-        try:
-            payload = jwt_manager.decode_access_token(token)
-            user_id = payload.get("user_id")
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=str(e)
-            )
+    async def get_user_cart(
+        self,
+        create_order_url: Optional[str] = None,
+        clear_cart_url: Optional[str] = None,
+    ) -> CartDetailSchema:
+        user = await self.user_repository.get_user_from_token()
 
-        cart = await self.shopping_cart_repository.get_or_create_cart(user_id)
+        cart = await self.shopping_cart_repository.get_or_create_cart(user.id)
         items = await self.get_cart_items_details(cart)
         response = CartDetailSchema(
             id=cart.id,
-            user_id=user_id,
+            user_id=user.id,
+            create_order_url=create_order_url if items else None,
+            clear_cart_url=clear_cart_url if items else None,
+            items=items
+        )
+        return response
+
+    async def get_cart_by_id(self, cart_id: int) -> CartDetailSchema:
+        cart = await self.shopping_cart_repository.get_cart_by_id(cart_id)
+        if not cart:
+            raise ShoppingCartNotFoundError("Cart not found")
+        items = await self.get_cart_items_details(cart)
+        response = CartDetailSchema(
+            id=cart.id,
+            user_id=cart.user_id,
             items=items
         )
         return response
@@ -52,12 +64,16 @@ class ShoppingCartService:
                 price=item.movie.price,
                 genres=[genre.name for genre in item.movie.genres],
                 release_year=item.movie.year,
-                warning=None,
+                warning=(
+                    "Movie already purchased. It will be removed from your order"
+                    if await self.user_repository.is_movie_in_purchased(cart.user_id, item.movie_id)
+                    else None
+                ),
             )
             for item in items
         ] if cart else []
 
-    async def get_cart_item_detail(self, item: CartItemModel) -> CartItemDetailSchema:
+    async def get_cart_item_detail(self, item: CartItemModel, warning: Optional[str]) -> CartItemDetailSchema:
         return CartItemDetailSchema(
                 id=item.id,
                 movie_id=item.movie.id,
@@ -65,17 +81,19 @@ class ShoppingCartService:
                 price=item.movie.price,
                 genres=[genre.name for genre in item.movie.genres],
                 release_year=item.movie.year,
-                warning=None,
+                warning=warning,
             )
 
     async def get_or_create_cart(self, user_id: int):
         cart = await self.shopping_cart_repository.get_or_create_cart(user_id)
         return cart
 
-    async def add_movie_to_cart(self, cart_id: int, movie_id) -> CartItemDetailSchema:
-        new_item = await self.cart_item_repository.create_cart_item(cart_id, movie_id)
-
-        response = await self.get_cart_item_detail(new_item)
+    async def add_movie_to_cart(self, cart: CartDetailSchema, movie_id) -> CartItemDetailSchema:
+        new_item = await self.cart_item_repository.create_cart_item(cart.id, movie_id)
+        warning = None
+        if await self.user_repository.is_movie_in_purchased(cart.user_id, movie_id):
+            warning = "Movie already purchased. It will be removed from your order"
+        response = await self.get_cart_item_detail(new_item, warning=warning)
         return response
 
     async def remove_movie_from_cart(self, cart_id: int, movie_id) -> None:

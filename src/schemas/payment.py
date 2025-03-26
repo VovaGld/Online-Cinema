@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field
-from src.database.models.payment import PaymentStatus
+from database.models.payment import PaymentStatus
 
 class PaymentBase(BaseModel):
     amount: float = Field(..., gt=0)

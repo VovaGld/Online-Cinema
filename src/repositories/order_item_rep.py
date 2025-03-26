@@ -9,8 +9,6 @@ from database.models.movies import MovieModel
 
 class OrderItemRepository:
 
-    table_user_movie = []
-
     def __init__(self, db: AsyncSession):
         self.db = db
 
@@ -26,9 +24,6 @@ class OrderItemRepository:
                 if not movie:
                     raise ValueError(f"Movie with ID {movie_id} not found")
 
-                if await self.check_movie_buy(movie_id):
-                    raise ValueError("You have already bought this movie")
-
                 order_items.append(
                     OrderItemModel(
                         order_id=order_id,
@@ -43,6 +38,3 @@ class OrderItemRepository:
         except SQLAlchemyError as e:
             await self.db.rollback()
             raise e
-
-    async def check_movie_buy(self, movie_id) -> bool:
-        return movie_id in self.table_user_movie
