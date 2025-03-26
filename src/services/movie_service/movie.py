@@ -34,6 +34,15 @@ class MovieService:
     async def delete_movie(self, movie_id: int):
         return await self.movie_rep.delete(movie_id)
 
+    async def like_movie(self, movie_id: int):
+        await self.movie_rep.increment_likes(movie_id)
+
+    async def dislike_movie(self, movie_id: int):
+        await self.movie_rep.increment_dislikes(movie_id)
+
+    async def rate_movie(self, movie_id: int, user_rating: float):
+        await self.movie_rep.rate_movie(movie_id, user_rating)
+
     async def is_admin(self):
         user = await self.user_rep.get_user_from_token()
         return user.has_group(UserGroupEnum.ADMIN)

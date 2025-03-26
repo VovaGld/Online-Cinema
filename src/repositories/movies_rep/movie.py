@@ -1,4 +1,4 @@
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -44,7 +44,15 @@ class MovieRepository:
         return db_movie
 
     async def get(self, movie_id: int):
-        result = await self.db.execute(select(MovieModel).where(MovieModel.id == movie_id))
+        result = await self.db.execute(
+            select(MovieModel).options(
+                joinedload(MovieModel.genres),
+                joinedload(MovieModel.stars),
+                joinedload(MovieModel.directors),
+                joinedload(MovieModel.comments),
+                joinedload(MovieModel.certification)
+            ).where(MovieModel.id == movie_id)
+        )
         return result.scalars().first()
 
     async def get_movies_with_params(
@@ -97,3 +105,38 @@ class MovieRepository:
             await self.db.delete(movie)
             await self.db.commit()
         return movie
+
+    async def increment_likes(self, movie_id: int):
+        await self.db.execute(
+            update(MovieModel)
+            .where(MovieModel.id == movie_id)
+            .values(likes=MovieModel.likes + 1)
+        )
+        await self.db.commit()
+
+    async def increment_dislikes(self, movie_id: int):
+        await self.db.execute(
+            update(MovieModel)
+            .where(MovieModel.id == movie_id)
+            .values(dislikes=MovieModel.dislikes + 1)
+        )
+        await self.db.commit()
+
+    async def rate_movie(self, movie_id: int, user_rating: float):
+        movie = await self.db.get(MovieModel, movie_id)
+        if movie is None:
+            raise ValueError("Movie not found")
+
+        if not (1 <= user_rating <= 10):
+            raise ValueError("Rating must be between 1 and 10")
+
+        if movie.rate == 0:
+            movie.rate = user_rating
+        else:
+            current_rating = movie.rate
+            rate_count = movie.rate_count if movie.rate_count else 1
+            new_average = round(((current_rating * rate_count) + user_rating) / (rate_count + 1), 2)
+            movie.rate = new_average
+            movie.rate_count = rate_count + 1
+
+        await self.db.commit()

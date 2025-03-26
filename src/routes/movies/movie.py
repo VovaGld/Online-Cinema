@@ -51,3 +51,21 @@ async def delete_movie(movie_id: int, movie_service: MovieService = Depends(get_
     if db_movie is None:
         raise HTTPException(status_code=404, detail="movie not found")
     return db_movie
+
+@router.post("/movies/{movie_id}/like")
+async def like_movie(movie_id: int, movie_service: MovieService = Depends(get_movie_service)):
+    await movie_service.like_movie(movie_id)
+    return {"message": "Movie liked successfully"}
+
+@router.post("/movies/{movie_id}/dislike")
+async def dislike_movie(movie_id: int, movie_service: MovieService = Depends(get_movie_service)):
+    await movie_service.dislike_movie(movie_id)
+    return {"message": "Movie disliked successfully"}
+
+
+@router.post("/movies/{movie_id}/rate")
+async def rate_movie(movie_id: int, user_rating: float, movie_service: MovieService = Depends(get_movie_service)):
+    if not (1 <= user_rating <= 10):
+        raise HTTPException(status_code=400, detail="Rating must be between 1 and 10")
+    await movie_service.rate_movie(movie_id, user_rating)
+    return {"message": "Movie rated successfully"}

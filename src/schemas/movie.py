@@ -50,7 +50,8 @@ class MovieSchema(BaseModel):
     certification: BaseResponseSchema
     likes: Optional[int] = None
     dislikes: Optional[int] = None
-    rate: Optional[int] = None
+    rate: Optional[float] = None
+    rate_count: Optional[int] = None
     comments: Optional[list[CommentResponseSchema]] = None
 
     model_config = {
