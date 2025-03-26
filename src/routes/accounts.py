@@ -15,7 +15,7 @@ from database import (
 )
 from database.models import ActivationTokenModel
 from database.models.accounts import PasswordResetTokenModel
-from dependencies.accounts import get_jwt_auth_manager, get_accounts_email_notificator
+from dependencies.accounts import get_jwt_auth_manager, get_email_notificator
 from exceptions import BaseSecurityError
 from notifications import EmailSenderInterface
 
@@ -62,7 +62,7 @@ router = APIRouter()
 async def register_user(
         user_data: UserRegistrationRequestSchema,
         db: AsyncSession = Depends(get_db),
-        email_sender: EmailSenderInterface = Depends(get_accounts_email_notificator),
+        email_sender: EmailSenderInterface = Depends(get_email_notificator),
 ) -> UserRegistrationResponseSchema:
     stmt = select(UserModel).where(UserModel.email == user_data.email)
     result = await db.execute(stmt)
@@ -360,7 +360,7 @@ async def refresh_access_token(
 async def request_password_reset_token(
         data: PasswordResetRequestSchema,
         db: AsyncSession = Depends(get_db),
-        email_sender: EmailSenderInterface = Depends(get_accounts_email_notificator)
+        email_sender: EmailSenderInterface = Depends(get_email_notificator)
 ) -> MessageResponseSchema:
     stmt = select(UserModel).filter_by(email=data.email)
     result = await db.execute(stmt)
