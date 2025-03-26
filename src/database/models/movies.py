@@ -160,9 +160,10 @@ class MovieModel(Base):
 
     certification_id: Mapped[int] = mapped_column(ForeignKey("certifications.id"))
     certification: Mapped["CertificationModel"] = relationship(back_populates="movies")
-    likes: Mapped[Optional[int]] = mapped_column(nullable=True)
-    dislikes: Mapped[Optional[int]] = mapped_column(nullable=True)
-    rate: Mapped[Optional[float]] = mapped_column(nullable=True)
+    likes: Mapped[Optional[int]] = mapped_column(nullable=True, default=0)
+    dislikes: Mapped[Optional[int]] = mapped_column(nullable=True, default=0)
+    rate: Mapped[Optional[float]] = mapped_column(nullable=True, default=0.0)
+    rate_count: Mapped[Optional[int]] = mapped_column(nullable=True, default=0)
 
     __table_args__ = (
         UniqueConstraint("name", "year", "time", name="unique_movie_constraint"),
