@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from fastapi import HTTPException
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import UserGroupEnum
@@ -38,6 +39,9 @@ class OrderService:
             user = await self.user_crud.get_user_from_token()
             user_cart = await self.cart_crud.get_user_cart(user.id)
 
+            if not user_cart:
+                raise HTTPException(status_code=400, detail="No movies in cart")
+
             cart_items = await self.cart_item_crud.get_all_cart_items_by_cart_id(user_cart.id)
 
             movie_ids = [
@@ -51,9 +55,15 @@ class OrderService:
             if not movie_ids:
                 raise HTTPException(status_code=400, detail="No movies in cart")
 
-            order = await self.order_crud.create_order(user.id)
+            try:
+                order = await self.order_crud.create_order(user.id)
+            except SQLAlchemyError as e:
+                raise HTTPException(status_code=400, detail=str(e))
 
-            order_items = await self.order_item_crud.create_order_items(order.id, movie_ids)
+            try:
+                order_items = await self.order_item_crud.create_order_items(order.id, movie_ids)
+            except SQLAlchemyError as e:
+                raise HTTPException(status_code=400, detail=str(e))
 
             order.order_items = order_items
 
