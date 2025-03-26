@@ -53,7 +53,7 @@ def get_s3_storage_client() -> S3StorageInterface:
         bucket_name=bucket_name
     )
 
-def get_accounts_email_notificator() -> EmailSenderInterface:
+def get_email_notificator() -> EmailSenderInterface:
     email_host = os.getenv("EMAIL_HOST", "localhost")
     email_port = int(os.getenv("EMAIL_PORT", 25))
     email_user = os.getenv("EMAIL_HOST_USER", "testuser")

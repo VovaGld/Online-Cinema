@@ -4,6 +4,8 @@ from email.mime.multipart import MIMEMultipart
 
 import aiosmtplib
 
+from database import UserModel
+from database.models import PaymentModel
 from exceptions import BaseEmailError
 from notifications.interfaces import EmailSenderInterface
 
@@ -69,4 +71,15 @@ class EmailSender(EmailSenderInterface):
         reset_link = "http://127.0.0.1/accounts//reset-password/complete/"
         text_content = (f"Hello,\n\nYou requested a password reset. Use the following link to reset your password: {reset_link}\n\n "
                         f"You can use this token to reset your password: {reset_token_complete}\n\nBest regards,\nZimBABE Team")
+        await self._send_email(email, subject, text_content)
+
+    async def send_payment_complete_email(self, email: str, payment: PaymentModel) -> None:
+        subject = "Payment Complete"
+        text_content = (
+            f"Hello,\n\n"
+            f"Your payment was successful.\n\n"
+            f"Payment №{payment.id}\n"
+            f"Order №{payment.order_id} - {payment.amount}$\n\n"
+            f"Best regards,\nZimBABE Team")
+
         await self._send_email(email, subject, text_content)
