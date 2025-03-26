@@ -1,17 +1,22 @@
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from database import UserGroupEnum
+from database.models import CommentModel
 from repositories.accounts_rep import UserRepository
 from repositories.movies_rep.movie import MovieRepository
-from schemas.movie import MovieCreateSchema, MovieSchema
+from schemas.movie import MovieCreateSchema, MovieSchema, CommentCreateSchema, CommentResponseSchema
 
 
 class MovieService:
     def __init__(
             self,
             movie_rep: MovieRepository,
-            user_rep: UserRepository
+            user_rep: UserRepository,
+            db: AsyncSession
     ) -> None:
         self.movie_rep = movie_rep
         self.user_rep = user_rep
+        self.db = db
 
     async def create_movie(self, movie: MovieCreateSchema):
         return await self.movie_rep.create(movie)
@@ -46,3 +51,23 @@ class MovieService:
     async def is_admin(self):
         user = await self.user_rep.get_user_from_token()
         return user.has_group(UserGroupEnum.ADMIN)
+
+    async def create_comment(self, movie_id: int, comment: CommentCreateSchema):
+        user = await self.user_rep.get_user_from_token()
+        db_comment = CommentModel(
+            user_id=user.id,
+            movie_id=movie_id,
+            text=comment.text
+        )
+        self.db.add(db_comment)
+        await self.db.commit()
+        await self.db.refresh(db_comment)
+        print(db_comment.id, user.email, db_comment.text)
+        return CommentResponseSchema(
+            id=db_comment.id,
+            user_id=user.id,
+            text=db_comment.text
+        )
+
+    async def cant_delete_movie(self, movie_id: int) -> bool:
+        return await self.movie_rep.movie_exists_in_purchases(movie_id)

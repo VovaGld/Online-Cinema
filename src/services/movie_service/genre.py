@@ -27,5 +27,4 @@ class GenreService:
 
     async def is_admin(self):
         user = await self.user_rep.get_user_from_token()
-        print(user)
         return user.has_group(UserGroupEnum.ADMIN)
