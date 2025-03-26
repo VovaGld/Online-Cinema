@@ -1,21 +1,30 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-
+from database import UserGroupEnum
+from repositories.accounts_rep import UserRepository
 from repositories.movies_rep.certification import CertificationRepository
 from schemas.movie import BaseCreateSchema
 
 
 class CertificationService:
-    def __init__(self, db: AsyncSession) -> None:
-        self.repository = CertificationRepository(db)
+    def __init__(
+            self,
+            certification_rep: CertificationRepository,
+            user_rep: UserRepository
+    ) -> None:
+        self.certification_rep = certification_rep
+        self.user_rep = user_rep
 
-    def create_certification(self, certification: BaseCreateSchema):
-        return self.repository.create(certification)
+    async def create_certification(self, certification: BaseCreateSchema):
+        return await self.certification_rep.create(certification)
 
-    def get_certification(self, certification_id: int):
-        return self.repository.get(certification_id)
+    async def get_certification(self, certification_id: int):
+        return await self.certification_rep.get(certification_id)
 
-    def get_all_certifications(self):
-        return self.repository.get_all()
+    async def get_all_certifications(self):
+        return await self.certification_rep.get_all()
 
-    def delete_certification(self, certification_id: int):
-        return self.repository.delete(certification_id)
+    async def delete_certification(self, certification_id: int):
+        return await self.certification_rep.delete(certification_id)
+
+    async def is_admin(self):
+        user = await self.user_rep.get_user_from_token()
+        return user.has_group(UserGroupEnum.ADMIN)

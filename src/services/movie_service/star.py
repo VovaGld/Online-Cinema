@@ -1,21 +1,30 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-
+from database import UserGroupEnum
+from repositories.accounts_rep import UserRepository
 from repositories.movies_rep.star import StarRepository
 from schemas.movie import BaseCreateSchema
 
 
 class StarService:
-    def __init__(self, db: AsyncSession) -> None:
-        self.repository = StarRepository(db)
+    def __init__(
+            self,
+            star_rep: StarRepository,
+            user_rep: UserRepository
+    ) -> None:
+        self.star_rep = star_rep
+        self.user_rep = user_rep
 
-    def create_star(self, star: BaseCreateSchema):
-        return self.repository.create(star)
+    async def create_star(self, star: BaseCreateSchema):
+        return await self.star_rep.create(star)
 
-    def get_star(self, star_id: int):
-        return self.repository.get(star_id)
+    async def get_star(self, star_id: int):
+        return await self.star_rep.get(star_id)
 
-    def get_all_stars(self):
-        return self.repository.get_all()
+    async def get_all_stars(self):
+        return await self.star_rep.get_all()
 
-    def delete_star(self, star_id: int):
-        return self.repository.delete(star_id)
+    async def delete_star(self, star_id: int):
+        return await self.star_rep.delete(star_id)
+
+    async def is_admin(self):
+        user = await self.user_rep.get_user_from_token()
+        return user.has_group(UserGroupEnum.ADMIN)

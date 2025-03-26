@@ -22,7 +22,7 @@ class CertificationRepository:
 
     async def get_all(self):
         result = await self.db.execute(select(CertificationModel))
-        return result.scalars().all
+        return result.scalars().all()
 
     async def delete(self, certification_id: int):
         certification = self.get(certification_id)

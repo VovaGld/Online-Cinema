@@ -22,7 +22,7 @@ class DirectorRepository:
 
     async def get_all(self):
         result = await self.db.execute(select(DirectorModel))
-        return result.scalars().all
+        return result.scalars().all()
 
     async def delete(self, director_id: int):
         director = self.get(director_id)

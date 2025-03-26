@@ -1,12 +1,12 @@
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from database.models import (
     MovieModel,
     GenreModel,
     StarModel,
     DirectorModel,
-    CertificationModel
 )
 from schemas.movie import MovieCreateSchema
 
@@ -16,10 +16,9 @@ class MovieRepository:
         self.db = db
 
     async def create(self, movie: MovieCreateSchema):
-        genres = [GenreModel(name=genre.name) for genre in movie.genres]
-        stars = [StarModel(name=star.name) for star in movie.stars]
-        directors = [DirectorModel(name=director.name) for director in movie.directors]
-        certification = CertificationModel(name=movie.certification.name)
+        genres = await self.db.execute(select(GenreModel).where(GenreModel.id.in_(movie.genres)))
+        stars = await self.db.execute(select(StarModel).where(StarModel.id.in_(movie.stars)))
+        directors = await self.db.execute(select(DirectorModel).where(DirectorModel.id.in_(movie.directors)))
 
         db_movie = MovieModel(
             name=movie.name,
@@ -31,10 +30,10 @@ class MovieRepository:
             gross=movie.gross,
             description=movie.description,
             price=movie.price,
-            genres=genres,
-            stars=stars,
-            directors=directors,
-            certification=certification
+            genres=list(genres.scalars()),
+            stars=list(stars.scalars()),
+            directors=list(directors.scalars()),
+            certification_id=movie.certification_id
         )
         self.db.add(db_movie)
         await self.db.commit()
@@ -48,9 +47,24 @@ class MovieRepository:
         result = await self.db.execute(select(MovieModel).where(MovieModel.id == movie_id))
         return result.scalars().first()
 
-    async def get_all(self):
-        result = await self.db.execute(select(MovieModel))
-        return result.scalars().all
+    async def get_all(self, page: int = 1, page_size: int = 10):
+        offset = (page - 1) * page_size
+        result = await self.db.execute(
+            select(MovieModel)
+            .options(
+                joinedload(MovieModel.genres),
+                joinedload(MovieModel.stars),
+                joinedload(MovieModel.directors),
+                joinedload(MovieModel.comments),
+                joinedload(MovieModel.certification)
+            ).offset(offset).limit(page_size)
+        )
+        movies = result.unique().scalars().all()
+
+        total_query = await self.db.execute(select(func.count()).select_from(MovieModel))
+        total = total_query.scalar()
+
+        return movies, total
 
     async def delete(self, movie_id: int):
         movie = self.get(movie_id)
