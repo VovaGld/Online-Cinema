@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from dependencies.movies import get_movie_service
-from schemas.movie import MovieSchema, MovieCreateSchema, PaginatedMoviesResponse
+from schemas.movie import MovieSchema, MovieCreateSchema, PaginatedMoviesResponse, CommentCreateSchema, \
+    CommentResponseSchema
 from services.movie_service.movie import MovieService
 
 router = APIRouter()
@@ -48,6 +49,11 @@ async def delete_movie(movie_id: int, movie_service: MovieService = Depends(get_
     db_movie = await movie_service.delete_movie(movie_id)
     if not await movie_service.is_admin():
         raise HTTPException(status_code=403, detail="You haven't appropriate permission")
+    if await movie_service.cant_delete_movie(movie_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete movie because it has been purchased by at least one user"
+        )
     if db_movie is None:
         raise HTTPException(status_code=404, detail="movie not found")
     return db_movie
@@ -69,3 +75,13 @@ async def rate_movie(movie_id: int, user_rating: float, movie_service: MovieServ
         raise HTTPException(status_code=400, detail="Rating must be between 1 and 10")
     await movie_service.rate_movie(movie_id, user_rating)
     return {"message": "Movie rated successfully"}
+
+
+@router.post("/movies/{movie_id}/leave_comment", response_model=CommentResponseSchema)
+async def create_comment(
+        comment: CommentCreateSchema,
+        movie_id: int,
+        movie_service: MovieService = Depends(get_movie_service)
+):
+    new_comment = await movie_service.create_comment(movie_id, comment)
+    return new_comment

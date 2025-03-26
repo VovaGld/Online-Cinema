@@ -20,7 +20,7 @@ class BaseCreateSchema(BaseModel):
 
 class CommentResponseSchema(BaseModel):
     id: int
-    author: str
+    user_id: int
     text: str
 
     model_config = {

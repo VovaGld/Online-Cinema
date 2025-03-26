@@ -1,7 +1,8 @@
-from sqlalchemy import select, func, update
+from sqlalchemy import select, func, update, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from database import UserPurchasedMoviesModel
 from database.models import (
     MovieModel,
     GenreModel,
@@ -140,3 +141,8 @@ class MovieRepository:
             movie.rate_count = rate_count + 1
 
         await self.db.commit()
+
+    async def movie_exists_in_purchases(self, movie_id: int) -> bool:
+        query = select(UserPurchasedMoviesModel).where(UserPurchasedMoviesModel.c.movie_id == movie_id)
+        result = await self.db.execute(query)
+        return True if result.scalar() else False

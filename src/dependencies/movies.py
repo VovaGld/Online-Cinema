@@ -81,8 +81,10 @@ def get_certification_service(
 def get_movie_service(
         movie_repository: MovieRepository = Depends(_get_movie_repository),
         user_repository: UserRepository = Depends(get_user_repository),
+        db: AsyncSession = Depends(get_db)
 ) -> MovieService:
     return MovieService(
         movie_rep=movie_repository,
         user_rep=user_repository,
+        db=db
     )
