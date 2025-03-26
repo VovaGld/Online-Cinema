@@ -37,6 +37,7 @@ class PaymentService:
         order_items = await self.order_repository.get_order_items(order.id)
         print("order", order)
         print("order items", order_items.order_items)
+        payment.order_items = order_items.order_items
         await self.payment_item_repository.create_payment_items(payment.id, order_items.order_items)
         return payment_session.url
 

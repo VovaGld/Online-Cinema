@@ -5,9 +5,10 @@ from fastapi import APIRouter, Query
 from fastapi.params import Depends
 
 from database.models.payment import PaymentStatus
-from dependencies.accounts import get_user_repository
+from dependencies.accounts import get_user_repository, get_email_notificator
 from dependencies.order import get_order_service
 from dependencies.payment import get_payment_service
+from notifications import EmailSender
 from repositories.accounts_rep import UserRepository
 from schemas.payment import PaymentSchema, PaymentListSchema
 from services.order_service import OrderService
@@ -20,12 +21,16 @@ router = APIRouter()
 async def payment_success(
         payment: PaymentService = Depends(get_payment_service),
         order: OrderService = Depends(get_order_service),
+        email: EmailSender = Depends(get_email_notificator),
+        user: UserRepository = Depends(get_user_repository),
         session_id: Optional[str] = Query(None)
 ):
     await payment.set_paid_status(session_id)
     payment_ = await payment.payment_repository.get_payment_by_session_id(session_id)
     await order.set_paid_status(payment_.order_id)
     await order.add_order_to_purchased(payment_.order_id)
+    user_ = await user.get_user_from_token()
+    await email.send_payment_complete_email(email=user_.email ,payment=payment_)
     return {"status": "success", "message": "Payment completed successfully"}
 
 
