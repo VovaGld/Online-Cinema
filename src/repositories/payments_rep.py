@@ -1,8 +1,8 @@
-from typing import Optional
+from typing import Optional, List
 
 import stripe
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from stripe.checkout import Session
 
 from database.models import OrderModel
@@ -15,6 +15,27 @@ class PaymentRepository:
     async def get_payment_by_session_id(self, session_id: str) -> Optional[PaymentModel]:
         result = await self.session.execute(select(PaymentModel).where(PaymentModel.session_id == session_id))
         return result.scalars().first()
+
+    async def get_payments(self, user_id: int) -> List[PaymentModel]:
+        result = await self.session.execute(select(PaymentModel).filter_by(user_id=user_id))
+        return result.scalars().all()
+
+    async def get_all_payments(self) -> List[PaymentModel]:
+        result = await self.session.execute(select(PaymentModel))
+        return result.scalars().all()
+
+
+    async def get_payments_with_params(self, **kwargs) -> List[PaymentModel]:
+        query = select(PaymentModel)
+        if kwargs.get("status"):
+            query = query.filter_by(status=kwargs["status"])
+        if kwargs.get("user_id"):
+            query = query.filter_by(user_id=kwargs["user_id"])
+        if kwargs.get("date_payment"):
+            query = query.filter(func.date(PaymentModel.created_at) == kwargs["date_order"])
+
+        result = await self.session.execute(query)
+        return result.scalars().all()
 
     async def create_payment(self, user_id: int, order: OrderModel, payment_session: Session) -> PaymentModel:
         try:

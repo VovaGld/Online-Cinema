@@ -1,6 +1,6 @@
 import stripe
 
-from database.models import OrderModel
+from database.models import OrderModel, PaymentModel
 from repositories.order_rep import OrderRepository
 from repositories.payment_item_rep import PaymentItemRepository
 from repositories.payments_rep import PaymentRepository
@@ -39,6 +39,15 @@ class PaymentService:
         print("order items", order_items.order_items)
         await self.payment_item_repository.create_payment_items(payment.id, order_items.order_items)
         return payment_session.url
+
+    async def get_payments(self, user_id: int) -> list[PaymentModel]:
+        return await self.payment_repository.get_payments(user_id)
+
+    async def get_all_payments(self) -> list[PaymentModel]:
+        return await self.payment_repository.get_all_payments()
+
+    async def get_payments_with_params(self, **kwargs) -> list[PaymentModel]:
+        return await self.payment_repository.get_payments_with_params(**kwargs)
 
     async def set_paid_status(self, session_id: str):
         await self.payment_repository.set_status(session_id, "paid")
