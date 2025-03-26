@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
 
+from database import UserModel
+from database.models import PaymentModel
+
 
 class EmailSenderInterface(ABC):
 
@@ -24,5 +27,9 @@ class EmailSenderInterface(ABC):
             email (str): The recipient's email address.
             reset_link (str): The password reset link to include in the email.
         """
+        pass
+
+    @abstractmethod
+    async def send_payment_complete_email(self, email: str, payment: PaymentModel) -> None:
         pass
 
