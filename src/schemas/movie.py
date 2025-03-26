@@ -9,6 +9,10 @@ class BaseResponseSchema(BaseModel):
     id: int
     name: str
 
+    model_config = {
+        "from_attributes": True
+    }
+
 
 class BaseCreateSchema(BaseModel):
     name: str
@@ -19,12 +23,18 @@ class CommentResponseSchema(BaseModel):
     author: str
     text: str
 
+    model_config = {
+        "from_attributes": True
+    }
+
 
 class CommentCreateSchema(BaseModel):
     text: str
 
 
-class MovieSchema(BaseResponseSchema):
+class MovieSchema(BaseModel):
+    id: int
+    name: str
     uuid: UUID
     year: int
     time: int
@@ -40,8 +50,13 @@ class MovieSchema(BaseResponseSchema):
     certification: BaseResponseSchema
     likes: Optional[int] = None
     dislikes: Optional[int] = None
-    rate: Optional[int] = None
+    rate: Optional[float] = None
+    rate_count: Optional[int] = None
     comments: Optional[list[CommentResponseSchema]] = None
+
+    model_config = {
+        "from_attributes": True
+    }
 
 
 class MovieCreateSchema(BaseCreateSchema):
@@ -53,7 +68,15 @@ class MovieCreateSchema(BaseCreateSchema):
     gross: Optional[float] = None
     description: str
     price: Decimal
-    genres: list[BaseCreateSchema]
-    stars: list[BaseCreateSchema]
-    directors: list[BaseCreateSchema]
-    certification: BaseCreateSchema
+    genres: list[int]
+    stars: list[int]
+    directors: list[int]
+    certification_id: int
+
+
+class PaginatedMoviesResponse(BaseModel):
+    movies: list[MovieSchema]
+    prev_page: Optional[str]
+    next_page: Optional[str]
+    total_pages: int
+    total_items: int

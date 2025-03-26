@@ -22,7 +22,7 @@ class GenreRepository:
 
     async def get_all(self):
         result = await self.db.execute(select(GenreModel))
-        return result.scalars().all
+        return result.scalars().all()
 
     async def delete(self, genre_id: int):
         genre = self.get(genre_id)

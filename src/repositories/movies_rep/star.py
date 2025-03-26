@@ -22,7 +22,7 @@ class StarRepository:
 
     async def get_all(self):
         result = await self.db.execute(select(StarModel))
-        return result.scalars().all
+        return result.scalars().all()
 
     async def delete(self, star_id: int):
         star = self.get(star_id)

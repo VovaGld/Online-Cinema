@@ -1,21 +1,31 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-
+from database import UserGroupEnum
+from repositories.accounts_rep import UserRepository
 from repositories.movies_rep.genre import GenreRepository
 from schemas.movie import BaseCreateSchema
 
 
 class GenreService:
-    def __init__(self, db: AsyncSession) -> None:
-        self.repository = GenreRepository(db)
+    def __init__(
+            self,
+            genre_rep: GenreRepository,
+            user_rep: UserRepository
+    ) -> None:
+        self.genre_rep = genre_rep
+        self.user_rep = user_rep
 
-    def create_genre(self, genre: BaseCreateSchema):
-        return self.repository.create(genre)
+    async def create_genre(self, genre: BaseCreateSchema):
+        return await self.genre_rep.create(genre)
 
-    def get_genre(self, genre_id: int):
-        return self.repository.get(genre_id)
+    async def get_genre(self, genre_id: int):
+        return await self.genre_rep.get(genre_id)
 
-    def get_all_genres(self):
-        return self.repository.get_all()
+    async def get_all_genres(self):
+        return await self.genre_rep.get_all()
 
-    def delete_genre(self, genre_id: int):
-        return self.repository.delete(genre_id)
+    async def delete_genre(self, genre_id: int):
+        return await self.genre_rep.delete(genre_id)
+
+    async def is_admin(self):
+        user = await self.user_rep.get_user_from_token()
+        print(user)
+        return user.has_group(UserGroupEnum.ADMIN)
