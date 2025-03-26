@@ -22,9 +22,25 @@ async def read_movie(movie_id: int, movie_service: MovieService = Depends(get_mo
 async def read_movies(
         page: int = Query(1, ge=1),
         page_size: int = Query(10, ge=1),
+        name: str = Query(None),
+        year: int = Query(None),
+        rating: float = Query(None),
+        sort_by: str = Query(None),
         movie_service: MovieService = Depends(get_movie_service)
 ):
-    paginated_movies = await movie_service.get_all_movies(page, page_size)
+    paginated_movies = await movie_service.get_movies_with_params(
+        page=page,
+        page_size=page_size,
+    )
+    if name or year or rating or sort_by:
+        paginated_movies = await movie_service.get_movies_with_params(
+            page=page,
+            page_size=page_size,
+            name=name,
+            year=year,
+            rating=rating,
+            sort_by=sort_by
+        )
     return PaginatedMoviesResponse(**paginated_movies)
 
 @router.delete("/{movie_id}", response_model=MovieSchema)

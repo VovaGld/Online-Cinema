@@ -5,7 +5,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
-from notifications import EmailSender
+from notifications import EmailSender, EmailSenderInterface
 from repositories.accounts_rep import UserRepository
 from security.http import get_token
 from security.interfaces import JWTAuthManagerInterface

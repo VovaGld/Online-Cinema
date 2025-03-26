@@ -47,24 +47,49 @@ class MovieRepository:
         result = await self.db.execute(select(MovieModel).where(MovieModel.id == movie_id))
         return result.scalars().first()
 
-    async def get_all(self, page: int = 1, page_size: int = 10):
-        offset = (page - 1) * page_size
-        result = await self.db.execute(
-            select(MovieModel)
-            .options(
-                joinedload(MovieModel.genres),
-                joinedload(MovieModel.stars),
-                joinedload(MovieModel.directors),
-                joinedload(MovieModel.comments),
-                joinedload(MovieModel.certification)
-            ).offset(offset).limit(page_size)
+    async def get_movies_with_params(
+            self,
+            page: int = 1,
+            page_size: int = 10,
+            name: str = None,
+            year: int = None,
+            rating: float = None,
+            sort_by: str = None,
+    ):
+        query = select(MovieModel).options(
+            joinedload(MovieModel.genres),
+            joinedload(MovieModel.stars),
+            joinedload(MovieModel.directors),
+            joinedload(MovieModel.comments),
+            joinedload(MovieModel.certification)
         )
+
+        if name:
+            query = query.filter(MovieModel.name.ilike(f"%{name}%"))
+        if year:
+            query = query.filter(MovieModel.year == year)
+        if rating:
+            query = query.filter(MovieModel.imdb >= rating)
+
+        if sort_by:
+            if sort_by == "price":
+                query = query.order_by(MovieModel.price)
+            elif sort_by == "release_year":
+                query = query.order_by(MovieModel.year)
+            elif sort_by == "popularity":
+                query = query.order_by(MovieModel.votes.desc())
+
+        offset = (page - 1) * page_size
+        query = query.offset(offset).limit(page_size)
+
+        result = await self.db.execute(query)
         movies = result.unique().scalars().all()
 
         total_query = await self.db.execute(select(func.count()).select_from(MovieModel))
         total = total_query.scalar()
 
         return movies, total
+
 
     async def delete(self, movie_id: int):
         movie = self.get(movie_id)

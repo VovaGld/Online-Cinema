@@ -19,8 +19,8 @@ class MovieService:
     async def get_movie(self, movie_id: int):
         return await self.movie_rep.get(movie_id)
 
-    async def get_all_movies(self, page: int = 1, page_size: int = 10):
-        movies, total_items = await self.movie_rep.get_all(page, page_size)
+    async def get_movies_with_params(self, page: int = 1, page_size: int = 10, **kwargs):
+        movies, total_items = await self.movie_rep.get_movies_with_params(page=page, page_size=page_size, **kwargs)
         total_pages = (total_items + page_size - 1) // page_size
 
         return {
