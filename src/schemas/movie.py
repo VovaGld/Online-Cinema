@@ -4,8 +4,6 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from schemas.order import OrderCreateResponseSchema
-
 
 class BaseResponseSchema(BaseModel):
     id: int

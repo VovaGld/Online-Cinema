@@ -11,3 +11,6 @@ from exceptions.storage import (
     S3FileNotFoundError,
     S3PermissionError
 )
+from exceptions.email import (
+    BaseEmailError,
+)

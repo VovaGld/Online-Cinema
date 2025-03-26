@@ -33,6 +33,18 @@ services:
       - PYTHONPATH=/usr/src/fastapi
     networks:
       - cinema_network
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    env_file:
+      - .env
+    networks:
+      - cinema_network
+
   minio:
       image: quay.io/minio/minio
       container_name: minio

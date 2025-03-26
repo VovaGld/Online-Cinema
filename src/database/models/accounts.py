@@ -12,7 +12,7 @@ from sqlalchemy import (
     func,
     Text,
     Date,
-    UniqueConstraint
+    UniqueConstraint, Table, Column,
 )
 from sqlalchemy.orm import (
     Mapped,
@@ -49,6 +49,18 @@ class UserGroupModel(Base):
         return f"<UserGroupModel(id={self.id}, name={self.name})>"
 
 
+UserPurchasedMoviesModel = Table(
+    "user_purchased_movies",
+    Base.metadata,
+    Column(
+        "movie_id",
+        ForeignKey("movies.id", ondelete="CASCADE"), primary_key=True, nullable=False),
+    Column(
+        "user_id",
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, nullable=False),
+)
+
+
 class UserModel(Base):
     __tablename__ = "users"
 
@@ -65,7 +77,7 @@ class UserModel(Base):
 
     orders: Mapped[list["OrderModel"]] = relationship("OrderModel", back_populates="user")
     cart: Mapped["CartModel"] = relationship("CartModel", back_populates="user")
-    payment: Mapped[List["Payment"]] = relationship("Payment", back_populates="user")
+    payments: Mapped[List["PaymentModel"]] = relationship("PaymentModel", back_populates="user")
 
     group_id: Mapped[int] = mapped_column(ForeignKey("user_groups.id", ondelete="CASCADE"), nullable=False)
     group: Mapped["UserGroupModel"] = relationship("UserGroupModel", back_populates="users")
@@ -92,6 +104,11 @@ class UserModel(Base):
         "UserProfileModel",
         back_populates="user",
         cascade="all, delete-orphan"
+    )
+
+    purchased_movies: Mapped[list["MovieModel"]] = relationship(
+        "MovieModel",
+        secondary=UserPurchasedMoviesModel,
     )
 
     def __repr__(self):
