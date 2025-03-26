@@ -66,7 +66,7 @@ async def get_orders(
                 movies=movie_responses,
                 total_price=order_.total_amount,
                 status=order_.status,
-                cancel_url=str(request.url_for("cancel_order", order_id=order_.id)) if order_.status != OrderStatus.CANCELED else None
+                cancel_url=str(request.url_for("cancel_order", order_id=order_.id)) if order_.status == OrderStatus.PENDING else None
             )
         )
     return OrderListSchema(orders=result)

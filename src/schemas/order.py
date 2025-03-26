@@ -12,7 +12,6 @@ class OrderSchema(BaseModel):
     movies: list[BaseResponseSchema]
     total_price: Decimal
     status: str
-    payment_url: Optional[HttpUrl] = None
     cancel_url: Optional[HttpUrl] = None
 
 
