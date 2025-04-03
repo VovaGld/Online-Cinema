@@ -12,24 +12,27 @@ from services.payment import PaymentService
 
 
 def get_payment_repository(
-        session: AsyncSession = Depends(get_db)
+    session: AsyncSession = Depends(get_db),
 ) -> PaymentRepository:
     return PaymentRepository(session=session)
 
+
 def get_payment_item_repository(
-        session: AsyncSession = Depends(get_db)
+    session: AsyncSession = Depends(get_db),
 ) -> PaymentItemRepository:
     return PaymentItemRepository(session=session)
 
-def get_payment_service(
-        payment_repository: PaymentRepository = Depends(get_payment_repository),
-        payment_item_repository: PaymentItemRepository = Depends(get_payment_item_repository),
-        order_repository: OrderRepository = Depends(get_order_repository)
 
+def get_payment_service(
+    payment_repository: PaymentRepository = Depends(get_payment_repository),
+    payment_item_repository: PaymentItemRepository = Depends(
+        get_payment_item_repository
+    ),
+    order_repository: OrderRepository = Depends(get_order_repository),
 ) -> PaymentService:
     return PaymentService(
         payment_repository=payment_repository,
         payment_item_repository=payment_item_repository,
         order_repository=order_repository,
-        stripe_secret_key=os.getenv("STRIPE_SECRET_KEY")
+        stripe_secret_key=os.getenv("STRIPE_SECRET_KEY"),
     )

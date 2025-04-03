@@ -24,9 +24,13 @@ def get_shopping_cart_item_repository(
 
 
 def get_shopping_cart_service(
-    shopping_cart_repository: Annotated[ShoppingCartRepository, Depends(get_shopping_cart_repository)],
-    cart_item_repository: Annotated[CartItemRepository, Depends(get_shopping_cart_item_repository)],
-    user_repository: Annotated[UserRepository, Depends(get_user_repository)]
+    shopping_cart_repository: Annotated[
+        ShoppingCartRepository, Depends(get_shopping_cart_repository)
+    ],
+    cart_item_repository: Annotated[
+        CartItemRepository, Depends(get_shopping_cart_item_repository)
+    ],
+    user_repository: Annotated[UserRepository, Depends(get_user_repository)],
 ) -> ShoppingCartService:
     return ShoppingCartService(
         shopping_cart_repository=shopping_cart_repository,

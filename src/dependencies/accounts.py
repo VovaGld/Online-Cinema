@@ -28,30 +28,31 @@ def get_jwt_auth_manager() -> JWTAuthManagerInterface:
     return JWTAuthManager(
         secret_key_access=secret_key_access,
         secret_key_refresh=secret_key_refresh,
-        algorithm=algorithm
+        algorithm=algorithm,
     )
 
 
 def get_user_repository(
-        session: AsyncSession = Depends(get_db),
-        JWTmanager: JWTAuthManager = Depends(get_jwt_auth_manager),
-        token: str = Depends(get_token)
+    session: AsyncSession = Depends(get_db),
+    JWTmanager: JWTAuthManager = Depends(get_jwt_auth_manager),
+    token: str = Depends(get_token),
 ) -> UserRepository:
     return UserRepository(session=session, JWTmanager=JWTmanager, token=token)
 
 
 def get_s3_storage_client() -> S3StorageInterface:
-    endpoint_url = os.getenv('S3_ENDPOINT', 'http://localhost:9000')
-    access_key = os.getenv('MINIO_ROOT_USER', 'minioadmin')
-    secret_key = os.getenv('MINIO_ROOT_PASSWORD', 'minioadmin')
-    bucket_name = os.getenv('MINIO_STORAGE', 'online-cinema-bucket')
+    endpoint_url = os.getenv("S3_ENDPOINT", "http://localhost:9000")
+    access_key = os.getenv("MINIO_ROOT_USER", "minioadmin")
+    secret_key = os.getenv("MINIO_ROOT_PASSWORD", "minioadmin")
+    bucket_name = os.getenv("MINIO_STORAGE", "online-cinema-bucket")
 
     return S3StorageClient(
         endpoint_url=endpoint_url,
         access_key=access_key,
         secret_key=secret_key,
-        bucket_name=bucket_name
+        bucket_name=bucket_name,
     )
+
 
 def get_email_notificator() -> EmailSenderInterface:
     email_host = os.getenv("EMAIL_HOST", "localhost")

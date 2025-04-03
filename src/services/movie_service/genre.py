@@ -5,11 +5,7 @@ from schemas.movie import BaseCreateSchema
 
 
 class GenreService:
-    def __init__(
-            self,
-            genre_rep: GenreRepository,
-            user_rep: UserRepository
-    ) -> None:
+    def __init__(self, genre_rep: GenreRepository, user_rep: UserRepository) -> None:
         self.genre_rep = genre_rep
         self.user_rep = user_rep
 
