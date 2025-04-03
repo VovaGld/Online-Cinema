@@ -1,8 +1,8 @@
-from database.session import get_db
 from database.models.accounts import (
+    RefreshTokenModel,
+    UserGroupEnum,
+    UserGroupModel,
     UserModel,
     UserPurchasedMoviesModel,
-    UserGroupModel,
-    UserGroupEnum,
-    RefreshTokenModel,
 )
+from database.session import get_db

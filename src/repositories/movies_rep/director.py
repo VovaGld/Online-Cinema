@@ -17,7 +17,9 @@ class DirectorRepository:
         return db_director
 
     async def get(self, director_id: int):
-        result = await self.db.execute(select(DirectorModel).where(DirectorModel.id == director_id))
+        result = await self.db.execute(
+            select(DirectorModel).where(DirectorModel.id == director_id)
+        )
         return result.scalars().first()
 
     async def get_all(self):

@@ -5,11 +5,7 @@ from schemas.movie import BaseCreateSchema
 
 
 class StarService:
-    def __init__(
-            self,
-            star_rep: StarRepository,
-            user_rep: UserRepository
-    ) -> None:
+    def __init__(self, star_rep: StarRepository, user_rep: UserRepository) -> None:
         self.star_rep = star_rep
         self.user_rep = user_rep
 

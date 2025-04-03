@@ -17,7 +17,9 @@ class GenreRepository:
         return db_genre
 
     async def get(self, genre_id: int):
-        result = await self.db.execute(select(GenreModel).where(GenreModel.id == genre_id))
+        result = await self.db.execute(
+            select(GenreModel).where(GenreModel.id == genre_id)
+        )
         return result.scalars().first()
 
     async def get_all(self):

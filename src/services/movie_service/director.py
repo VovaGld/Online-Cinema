@@ -6,9 +6,7 @@ from schemas.movie import BaseCreateSchema
 
 class DirectorService:
     def __init__(
-            self,
-            director_rep: DirectorRepository,
-            user_rep: UserRepository
+        self, director_rep: DirectorRepository, user_rep: UserRepository
     ) -> None:
         self.director_rep = director_rep
         self.user_rep = user_rep

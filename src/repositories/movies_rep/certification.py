@@ -17,7 +17,9 @@ class CertificationRepository:
         return db_certification
 
     async def get(self, certification_id: int):
-        result = await self.db.execute(select(CertificationModel).where(CertificationModel.id == certification_id))
+        result = await self.db.execute(
+            select(CertificationModel).where(CertificationModel.id == certification_id)
+        )
         return result.scalars().first()
 
     async def get_all(self):

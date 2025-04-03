@@ -3,27 +3,33 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
+    Column,
+    ForeignKey,
+    Numeric,
     String,
+    Table,
     Text,
     UniqueConstraint,
-    ForeignKey,
-    Table,
-    Column, Numeric
 )
-from sqlalchemy.orm import mapped_column, Mapped, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.models.base import Base
-
 
 MovieGenresModel = Table(
     "movie_genres",
     Base.metadata,
     Column(
         "movie_id",
-        ForeignKey("movies.id", ondelete="CASCADE"), primary_key=True, nullable=False),
+        ForeignKey("movies.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    ),
     Column(
         "genre_id",
-        ForeignKey("genres.id", ondelete="CASCADE"), primary_key=True, nullable=False),
+        ForeignKey("genres.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    ),
 )
 
 MovieStarsModel = Table(
@@ -31,10 +37,16 @@ MovieStarsModel = Table(
     Base.metadata,
     Column(
         "movie_id",
-        ForeignKey("movies.id", ondelete="CASCADE"), primary_key=True, nullable=False),
+        ForeignKey("movies.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    ),
     Column(
         "star_id",
-        ForeignKey("stars.id", ondelete="CASCADE"), primary_key=True, nullable=False),
+        ForeignKey("stars.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    ),
 )
 
 MovieDirectorsModel = Table(
@@ -42,10 +54,16 @@ MovieDirectorsModel = Table(
     Base.metadata,
     Column(
         "movie_id",
-        ForeignKey("movies.id", ondelete="CASCADE"), primary_key=True, nullable=False),
+        ForeignKey("movies.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    ),
     Column(
         "director_id",
-        ForeignKey("directors.id", ondelete="CASCADE"), primary_key=True, nullable=False),
+        ForeignKey("directors.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    ),
 )
 
 
@@ -56,9 +74,7 @@ class GenreModel(Base):
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
 
     movies: Mapped[list["MovieModel"]] = relationship(
-        "MovieModel",
-        secondary=MovieGenresModel,
-        back_populates="genres"
+        "MovieModel", secondary=MovieGenresModel, back_populates="genres"
     )
 
     def __repr__(self):
@@ -72,9 +88,7 @@ class StarModel(Base):
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
 
     movies: Mapped[list["MovieModel"]] = relationship(
-        "MovieModel",
-        secondary=MovieStarsModel,
-        back_populates="stars"
+        "MovieModel", secondary=MovieStarsModel, back_populates="stars"
     )
 
     def __repr__(self):
@@ -88,9 +102,7 @@ class DirectorModel(Base):
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
 
     movies: Mapped[list["MovieModel"]] = relationship(
-        "MovieModel",
-        secondary=MovieDirectorsModel,
-        back_populates="directors"
+        "MovieModel", secondary=MovieDirectorsModel, back_populates="directors"
     )
 
     def __repr__(self):
@@ -135,21 +147,15 @@ class MovieModel(Base):
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
 
     genres: Mapped[list["GenreModel"]] = relationship(
-        "GenreModel",
-        secondary=MovieGenresModel,
-        back_populates="movies"
+        "GenreModel", secondary=MovieGenresModel, back_populates="movies"
     )
 
     stars: Mapped[list["StarModel"]] = relationship(
-        "StarModel",
-        secondary=MovieStarsModel,
-        back_populates="movies"
+        "StarModel", secondary=MovieStarsModel, back_populates="movies"
     )
 
     directors: Mapped[list["DirectorModel"]] = relationship(
-        "DirectorModel",
-        secondary=MovieDirectorsModel,
-        back_populates="movies"
+        "DirectorModel", secondary=MovieDirectorsModel, back_populates="movies"
     )
 
     order_items: Mapped[list["OrderItemModel"]] = relationship(

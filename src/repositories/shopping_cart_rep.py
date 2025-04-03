@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from database.models import MovieModel
-from database.models.shopping_cart import CartModel, CartItemModel
+from database.models.shopping_cart import CartItemModel, CartModel
 from exceptions.shopping_cart import CreateShoppingCartError
 
 
@@ -28,7 +28,6 @@ class ShoppingCartRepository:
             await self._session.refresh(cart)
         except SQLAlchemyError as exception:
             await self._session.rollback()
-            print(f"SQLAlchemy error: {exception}")
             raise CreateShoppingCartError(str(exception))
         return cart
 
@@ -36,7 +35,9 @@ class ShoppingCartRepository:
         result = await self._session.execute(
             select(CartModel)
             .options(
-                selectinload(CartModel.items).joinedload(CartItemModel.movie).selectinload(MovieModel.genres)
+                selectinload(CartModel.items)
+                .joinedload(CartItemModel.movie)
+                .selectinload(MovieModel.genres)
             )
             .filter(CartModel.user_id == user_id)
         )
@@ -47,7 +48,9 @@ class ShoppingCartRepository:
         result = await self._session.execute(
             select(CartModel)
             .options(
-                selectinload(CartModel.items).joinedload(CartItemModel.movie).selectinload(MovieModel.genres)
+                selectinload(CartModel.items)
+                .joinedload(CartItemModel.movie)
+                .selectinload(MovieModel.genres)
             )
             .filter(CartModel.id == cart_id)
         )
