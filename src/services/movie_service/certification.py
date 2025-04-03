@@ -6,9 +6,7 @@ from schemas.movie import BaseCreateSchema
 
 class CertificationService:
     def __init__(
-            self,
-            certification_rep: CertificationRepository,
-            user_rep: UserRepository
+        self, certification_rep: CertificationRepository, user_rep: UserRepository
     ) -> None:
         self.certification_rep = certification_rep
         self.user_rep = user_rep

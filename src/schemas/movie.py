@@ -9,9 +9,7 @@ class BaseResponseSchema(BaseModel):
     id: int
     name: str
 
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = {"from_attributes": True}
 
 
 class BaseCreateSchema(BaseModel):
@@ -23,9 +21,7 @@ class CommentResponseSchema(BaseModel):
     user_id: int
     text: str
 
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = {"from_attributes": True}
 
 
 class CommentCreateSchema(BaseModel):
@@ -54,9 +50,7 @@ class MovieSchema(BaseModel):
     rate_count: Optional[int] = None
     comments: Optional[list[CommentResponseSchema]] = None
 
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = {"from_attributes": True}
 
 
 class MovieCreateSchema(BaseCreateSchema):
