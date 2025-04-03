@@ -62,7 +62,6 @@ class MovieService:
         self.db.add(db_comment)
         await self.db.commit()
         await self.db.refresh(db_comment)
-        print(db_comment.id, user.email, db_comment.text)
         return CommentResponseSchema(
             id=db_comment.id,
             user_id=user.id,

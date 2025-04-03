@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime, date, timedelta, timezone
-from typing import List, Optional
+from typing import Optional
 
 from sqlalchemy import (
     ForeignKey,
@@ -43,7 +43,7 @@ class UserGroupModel(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[UserGroupEnum] = mapped_column(Enum(UserGroupEnum), nullable=False, unique=True)
 
-    users: Mapped[List["UserModel"]] = relationship("UserModel", back_populates="group")
+    users: Mapped[list["UserModel"]] = relationship("UserModel", back_populates="group")
 
     def __repr__(self):
         return f"<UserGroupModel(id={self.id}, name={self.name})>"
@@ -77,7 +77,7 @@ class UserModel(Base):
 
     orders: Mapped[list["OrderModel"]] = relationship("OrderModel", back_populates="user")
     cart: Mapped["CartModel"] = relationship("CartModel", back_populates="user")
-    payments: Mapped[List["PaymentModel"]] = relationship("PaymentModel", back_populates="user")
+    payments: Mapped[list["PaymentModel"]] = relationship("PaymentModel", back_populates="user")
 
     group_id: Mapped[int] = mapped_column(ForeignKey("user_groups.id", ondelete="CASCADE"), nullable=False)
     group: Mapped["UserGroupModel"] = relationship("UserGroupModel", back_populates="users")
@@ -94,7 +94,7 @@ class UserModel(Base):
         cascade="all, delete-orphan"
     )
 
-    refresh_tokens: Mapped[List["RefreshTokenModel"]] = relationship(
+    refresh_tokens: Mapped[list["RefreshTokenModel"]] = relationship(
         "RefreshTokenModel",
         back_populates="user",
         cascade="all, delete-orphan"

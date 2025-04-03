@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dependencies.accounts import get_s3_storage_client, get_jwt_auth_manager
 from database import get_db
-from database.models.accounts import UserModel, UserProfileModel, UserGroupModel, UserGroupEnum
+from database.models.accounts import UserModel, UserProfileModel, UserGroupModel, UserGroupEnum, GenderEnum
 from exceptions import BaseSecurityError, S3FileUploadError
 from schemas.profiles import ProfileCreateSchema, ProfileResponseSchema
 from security.interfaces import JWTAuthManagerInterface
@@ -32,7 +32,6 @@ async def create_profile(
         s3_client: S3StorageInterface = Depends(get_s3_storage_client),
         profile_data: ProfileCreateSchema = Depends(ProfileCreateSchema.from_form)
 ) -> ProfileResponseSchema:
-    from database.models.accounts import GenderEnum
     try:
         payload = jwt_manager.decode_access_token(token)
         token_user_id = payload.get("user_id")
@@ -80,7 +79,6 @@ async def create_profile(
     try:
         await s3_client.upload_file(file_name=avatar_key, file_data=avatar_bytes)
     except S3FileUploadError as e:
-        print(f"Error uploading avatar to S3: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to upload avatar. Please try again later."

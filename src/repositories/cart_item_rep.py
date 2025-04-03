@@ -54,7 +54,6 @@ class CartItemRepository:
             await self._session.refresh(cart_item)
         except SQLAlchemyError as exception:
             await self._session.rollback()
-            print(f"SQLAlchemy error: {exception}")
             raise AddCartItemError(str(exception))
 
         result = await self._session.execute(
@@ -70,7 +69,6 @@ class CartItemRepository:
             await self._session.commit()
         except SQLAlchemyError as exception:
             await self._session.rollback()
-            print(f"SQLAlchemy error: {exception}")
             raise DeleteCartItemError(str(exception))
 
     async def delete_all_cart_items(self, cart_id: int) -> None:

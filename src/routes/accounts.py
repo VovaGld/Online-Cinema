@@ -97,7 +97,6 @@ async def register_user(
         await db.commit()
         await db.refresh(new_user)
     except ValueError as e:
-        print(e)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)

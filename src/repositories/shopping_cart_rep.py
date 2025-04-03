@@ -28,7 +28,6 @@ class ShoppingCartRepository:
             await self._session.refresh(cart)
         except SQLAlchemyError as exception:
             await self._session.rollback()
-            print(f"SQLAlchemy error: {exception}")
             raise CreateShoppingCartError(str(exception))
         return cart
 

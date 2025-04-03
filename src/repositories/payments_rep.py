@@ -51,14 +51,12 @@ class PaymentRepository:
             await self.session.refresh(new_payment)
             return new_payment
         except stripe.error.StripeError as e:
-            print(f"Stripe error: {e}")
             raise e
 
 
     def create_payment_session(self, order: OrderModel, success_url, cancel_url) -> Session:
         success_url = success_url + "?session_id={CHECKOUT_SESSION_ID}"
         cancel_url = cancel_url + "?session_id={CHECKOUT_SESSION_ID}"
-        print(success_url)
 
         new_session = stripe.checkout.Session.create(
             payment_method_types=["card"],
