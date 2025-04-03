@@ -4,7 +4,7 @@ from fastapi.params import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
-from dependencies.order import get_order_service, get_order_repository
+from dependencies.order import get_order_repository
 from repositories.order_rep import OrderRepository
 from repositories.payment_item_rep import PaymentItemRepository
 from repositories.payments_rep import PaymentRepository

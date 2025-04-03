@@ -1,17 +1,20 @@
 from fastapi import Depends
-from requests import session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.session import get_db
 from dependencies.accounts import get_user_repository
+from dependencies.shopping_cart import (
+    get_shopping_cart_item_repository,
+    get_shopping_cart_repository,
+)
 from repositories.accounts_rep import UserRepository
 from repositories.cart_item_rep import CartItemRepository
-from repositories.movies_rep.movie import MovieRepository
 from repositories.order_item_rep import OrderItemRepository
-
 from repositories.order_rep import OrderRepository
 from repositories.shopping_cart_rep import ShoppingCartRepository
 from services.order_service import OrderService
+
+
 from dependencies.shopping_cart import (
     ShoppingCartRepository as Cart,
     get_shopping_cart_repository,

@@ -1,22 +1,26 @@
 from typing import List, Optional
+
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models.orders import OrderItemModel
 from database.models.movies import MovieModel
+from database.models.orders import OrderItemModel
 
 
 class OrderItemRepository:
-
     def __init__(self, db: AsyncSession):
         self.db = db
 
     async def get_movie_by_id(self, movie_id: int) -> Optional[MovieModel]:
-        result = await self.db.execute(select(MovieModel).where(MovieModel.id == movie_id))
+        result = await self.db.execute(
+            select(MovieModel).where(MovieModel.id == movie_id)
+        )
         return result.scalars().first()
 
-    async def create_order_items(self, order_id: int, movie_ids: List[int]) -> List[OrderItemModel]:
+    async def create_order_items(
+        self, order_id: int, movie_ids: List[int]
+    ) -> List[OrderItemModel]:
         try:
             order_items = []
             for movie_id in movie_ids:
@@ -26,9 +30,7 @@ class OrderItemRepository:
 
                 order_items.append(
                     OrderItemModel(
-                        order_id=order_id,
-                        movie_id=movie.id,
-                        price_at_order=movie.price
+                        order_id=order_id, movie_id=movie.id, price_at_order=movie.price
                     )
                 )
 

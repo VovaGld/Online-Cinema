@@ -103,7 +103,7 @@ def get_movie_service(
 ) -> MovieService:
     return MovieService(movie_rep=movie_repository, user_rep=user_repository, db=db)
 
-
+  
 def get_comment_service(
     comment_repository: CommentRepository = Depends(_get_comment_repository),
     user_repository: UserRepository = Depends(get_user_repository),

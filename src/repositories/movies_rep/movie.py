@@ -1,13 +1,13 @@
-from sqlalchemy import select, func, update, exists
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from database import UserPurchasedMoviesModel
 from database.models import (
-    MovieModel,
-    GenreModel,
-    StarModel,
     DirectorModel,
+    GenreModel,
+    MovieModel,
+    StarModel,
 )
 from schemas.movie import MovieCreateSchema
 

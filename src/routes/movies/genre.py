@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
+
 from dependencies.movies import get_genre_service
-from schemas.movie import BaseResponseSchema, BaseCreateSchema
+from schemas.movie import BaseCreateSchema, BaseResponseSchema
 from services.movie_service.genre import GenreService
 
 router = APIRouter()

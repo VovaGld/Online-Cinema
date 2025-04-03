@@ -4,16 +4,23 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from starlette.requests import Request
 
 from database import UserGroupEnum
-from exceptions import TokenExpiredError, InvalidTokenError
-from exceptions.cart_item import CartItemNotInCartError, CartItemAlreadyInCartError, CartItemException
-from exceptions.shopping_cart import DeleteCartItemError, ShoppingCartNotFoundError, ShoppingCartException
-from services.shopping_cart import ShoppingCartService
 from dependencies.shopping_cart import get_shopping_cart_service
-from schemas.shopping_cart import (
-    CartItemDetailSchema,
-    CartDetailSchema,
+from exceptions import InvalidTokenError, TokenExpiredError
+from exceptions.cart_item import (
+    CartItemAlreadyInCartError,
+    CartItemException,
+    CartItemNotInCartError,
 )
-
+from exceptions.shopping_cart import (
+    DeleteCartItemError,
+    ShoppingCartException,
+    ShoppingCartNotFoundError,
+)
+from schemas.shopping_cart import (
+    CartDetailSchema,
+    CartItemDetailSchema,
+)
+from services.shopping_cart import ShoppingCartService
 
 router = APIRouter()
 
@@ -30,12 +37,12 @@ router = APIRouter()
     responses={
         401: {"description": "Token expired"},
         403: {"description": "Invalid token"},
-        500: {"description": "Internal server error"}
-    }
+        500: {"description": "Internal server error"},
+    },
 )
 async def get_cart(
-        cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
-        request: Request = Request,
+    cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
+    request: Request = Request,
 ) -> CartDetailSchema:
     create_order_url = str(request.url_for("create"))
     clear_cart_url = str(request.url_for("clear_cart"))
@@ -46,18 +53,16 @@ async def get_cart(
         )
     except TokenExpiredError as exception:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(exception)
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exception)
         )
     except InvalidTokenError as exception:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(exception)
+            status_code=status.HTTP_403_FORBIDDEN, detail=str(exception)
         )
     except (CartItemException, ShoppingCartException):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
     return response
 
@@ -75,42 +80,39 @@ async def get_cart(
         400: {"description": "Movie already in cart."},
         401: {"description": "Token expired"},
         403: {"description": "Invalid token"},
-        500: {"description": "Internal server error"}
-    }
+        500: {"description": "Internal server error"},
+    },
 )
 async def add_to_cart(
-        movie_id: int,
-        cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
+    movie_id: int,
+    cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
 ) -> CartItemDetailSchema:
     try:
         cart = await cart_service.get_user_cart()
     except TokenExpiredError as exception:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(exception)
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exception)
         )
     except InvalidTokenError as exception:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(exception)
+            status_code=status.HTTP_403_FORBIDDEN, detail=str(exception)
         )
     except (CartItemException, ShoppingCartException):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
 
     try:
         response = await cart_service.add_movie_to_cart(cart, movie_id)
     except CartItemAlreadyInCartError:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Movie already in cart."
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Movie already in cart."
         )
     except (CartItemException, ShoppingCartException):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
     return response
 
@@ -128,36 +130,39 @@ async def add_to_cart(
         401: {"description": "Token expired"},
         403: {"description": "Invalid token"},
         500: {"description": "Internal server error"},
-    }
+    },
 )
 async def remove_from_cart(
-        movie_id: int,
-        cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
+    movie_id: int,
+    cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
 ) -> None:
     try:
         cart = await cart_service.get_user_cart()
     except TokenExpiredError as exception:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(exception)
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exception)
         )
     except InvalidTokenError as exception:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(exception)
+            status_code=status.HTTP_403_FORBIDDEN, detail=str(exception)
         )
     except (CartItemException, ShoppingCartException):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
 
     try:
         await cart_service.remove_movie_from_cart(cart.id, movie_id)
     except CartItemNotInCartError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not in cart")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Movie not in cart"
+        )
     except DeleteCartItemError:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to remove movie")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to remove movie",
+        )
 
 
 @router.delete(
@@ -168,8 +173,8 @@ async def remove_from_cart(
     responses={
         400: {"description": "Cart is already empty"},
         401: {"description": "Token has expired"},
-        403: {"description": "Invalid Token"}
-    }
+        403: {"description": "Invalid Token"},
+    },
 )
 async def clear_cart(
     cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
@@ -178,13 +183,11 @@ async def clear_cart(
         cart = await cart_service.get_user_cart()
     except TokenExpiredError as exception:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(exception)
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exception)
         )
     except InvalidTokenError as exception:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(exception)
+            status_code=status.HTTP_403_FORBIDDEN, detail=str(exception)
         )
     if not cart.items:
         raise HTTPException(status_code=400, detail="Cart is already empty.")
@@ -202,28 +205,25 @@ async def clear_cart(
     ),
     responses={
         403: {"description": "Access denied; Invalid token"},
-        401: {"description": "Token has expired."}
-    }
+        401: {"description": "Token has expired."},
+    },
 )
 async def get_cart_admin(
-        cart_id: int,
-        cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
+    cart_id: int,
+    cart_service: Annotated[ShoppingCartService, Depends(get_shopping_cart_service)],
 ) -> CartDetailSchema:
     try:
         user = await cart_service.user_repository.get_user_from_token()
     except TokenExpiredError as exception:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(exception)
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exception)
         )
     except InvalidTokenError as exception:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(exception)
+            status_code=status.HTTP_403_FORBIDDEN, detail=str(exception)
         )
-    if (
-            not user.has_group(UserGroupEnum.ADMIN)
-            and not user.has_group(UserGroupEnum.MODERATOR)
+    if not user.has_group(UserGroupEnum.ADMIN) and not user.has_group(
+        UserGroupEnum.MODERATOR
     ):
         raise HTTPException(status_code=403, detail="Access denied")
 
@@ -231,7 +231,6 @@ async def get_cart_admin(
         cart = await cart_service.get_cart_by_id(cart_id)
     except ShoppingCartNotFoundError as exception:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(exception)
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(exception)
         )
     return cart

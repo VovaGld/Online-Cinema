@@ -8,6 +8,7 @@ from schemas.movie import (
     CommentResponseSchema,
 )
 from services.movie_service.comment import CommentService
+
 from services.movie_service.movie import MovieService
 
 router = APIRouter()
@@ -110,6 +111,7 @@ async def create_comment(
     comment: CommentCreateSchema,
     movie_id: int,
     comment_service: CommentService = Depends(get_comment_service),
+    movie_service: MovieService = Depends(get_movie_service),
 ):
     new_comment = await comment_service.create_comment(movie_id, comment)
 

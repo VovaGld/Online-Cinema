@@ -3,7 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import UserGroupEnum
 from repositories.accounts_rep import UserRepository
 from repositories.movies_rep.movie import MovieRepository
-from schemas.movie import MovieCreateSchema, MovieSchema
+from schemas.movie import (
+    CommentCreateSchema,
+    CommentResponseSchema,
+    MovieCreateSchema,
+    MovieSchema,
+)
 
 
 class MovieService:
@@ -59,6 +64,16 @@ class MovieService:
     async def is_admin(self):
         user = await self.user_rep.get_user_from_token()
         return user.has_group(UserGroupEnum.ADMIN)
+
+    async def create_comment(self, movie_id: int, comment: CommentCreateSchema):
+        user = await self.user_rep.get_user_from_token()
+        db_comment = CommentModel(user_id=user.id, movie_id=movie_id, text=comment.text)
+        self.db.add(db_comment)
+        await self.db.commit()
+        await self.db.refresh(db_comment)
+        return CommentResponseSchema(
+            id=db_comment.id, user_id=user.id, text=db_comment.text
+        )
 
     async def cant_delete_movie(self, movie_id: int) -> bool:
         return await self.movie_rep.movie_exists_in_purchases(movie_id)

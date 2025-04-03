@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
+
 from dependencies.movies import get_star_service
-from schemas.movie import BaseResponseSchema, BaseCreateSchema
+from schemas.movie import BaseCreateSchema, BaseResponseSchema
 from services.movie_service.star import StarService
 
 router = APIRouter()

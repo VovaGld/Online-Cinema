@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
+
 from dependencies.movies import get_director_service
-from schemas.movie import BaseResponseSchema, BaseCreateSchema
+from schemas.movie import BaseCreateSchema, BaseResponseSchema
 from services.movie_service.director import DirectorService
 
 router = APIRouter()

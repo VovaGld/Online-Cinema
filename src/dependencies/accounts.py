@@ -1,6 +1,6 @@
-from dotenv import load_dotenv
 import os
 
+from dotenv import load_dotenv
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,7 +10,7 @@ from repositories.accounts_rep import UserRepository
 from security.http import get_token
 from security.interfaces import JWTAuthManagerInterface
 from security.jwt_auth_manager import JWTAuthManager
-from storages import S3StorageInterface, S3StorageClient
+from storages import S3StorageClient, S3StorageInterface
 
 load_dotenv()
 
