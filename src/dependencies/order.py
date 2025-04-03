@@ -15,6 +15,13 @@ from repositories.shopping_cart_rep import ShoppingCartRepository
 from services.order_service import OrderService
 
 
+from dependencies.shopping_cart import (
+    ShoppingCartRepository as Cart,
+    get_shopping_cart_repository,
+    get_shopping_cart_item_repository,
+)
+
+
 def get_order_repository(
     session: AsyncSession = Depends(get_db),
 ):

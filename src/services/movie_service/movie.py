@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import UserGroupEnum
-from database.models import CommentModel
 from repositories.accounts_rep import UserRepository
 from repositories.movies_rep.movie import MovieRepository
 from schemas.movie import (
@@ -36,12 +35,16 @@ class MovieService:
 
         return {
             "movies": [MovieSchema.model_validate(movie) for movie in movies],
-            "prev_page": f"/api/movies/?page={page - 1}&per_page={page_size}"
-            if page > 1
-            else None,
-            "next_page": f"/api/movies/?page={page + 1}&per_page={page_size}"
-            if page < total_pages
-            else None,
+            "prev_page": (
+                f"/api/movies/?page={page - 1}&per_page={page_size}"
+                if page > 1
+                else None
+            ),
+            "next_page": (
+                f"/api/movies/?page={page + 1}&per_page={page_size}"
+                if page < total_pages
+                else None
+            ),
             "total_pages": total_pages,
             "total_items": total_items,
         }

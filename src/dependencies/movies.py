@@ -9,11 +9,13 @@ from repositories.movies_rep.director import DirectorRepository
 from repositories.movies_rep.genre import GenreRepository
 from repositories.movies_rep.movie import MovieRepository
 from repositories.movies_rep.star import StarRepository
+from repositories.movies_rep.comment import CommentRepository
 from services.movie_service.certification import CertificationService
 from services.movie_service.director import DirectorService
 from services.movie_service.genre import GenreService
 from services.movie_service.movie import MovieService
 from services.movie_service.star import StarService
+from services.movie_service.comment import CommentService
 
 
 def _get_genre_repository(
@@ -44,6 +46,12 @@ def _get_movie_repository(
     session: AsyncSession = Depends(get_db),
 ):
     return MovieRepository(db=session)
+
+
+def _get_comment_repository(
+    session: AsyncSession = Depends(get_db),
+):
+    return CommentRepository(db=session)
 
 
 def get_genre_service(
@@ -94,3 +102,13 @@ def get_movie_service(
     db: AsyncSession = Depends(get_db),
 ) -> MovieService:
     return MovieService(movie_rep=movie_repository, user_rep=user_repository, db=db)
+
+  
+def get_comment_service(
+    comment_repository: CommentRepository = Depends(_get_comment_repository),
+    user_repository: UserRepository = Depends(get_user_repository),
+    db: AsyncSession = Depends(get_db),
+) -> CommentService:
+    return CommentService(
+        comment_rep=comment_repository, user_rep=user_repository, db=db
+    )

@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-
-from dependencies.movies import get_movie_service
+from dependencies.movies import get_movie_service, get_comment_service
 from schemas.movie import (
+    MovieSchema,
+    MovieCreateSchema,
+    PaginatedMoviesResponse,
     CommentCreateSchema,
     CommentResponseSchema,
-    MovieCreateSchema,
-    MovieSchema,
-    PaginatedMoviesResponse,
 )
+from services.movie_service.comment import CommentService
+
 from services.movie_service.movie import MovieService
 
 router = APIRouter()
@@ -109,7 +110,9 @@ async def rate_movie(
 async def create_comment(
     comment: CommentCreateSchema,
     movie_id: int,
+    comment_service: CommentService = Depends(get_comment_service),
     movie_service: MovieService = Depends(get_movie_service),
 ):
-    new_comment = await movie_service.create_comment(movie_id, comment)
+    new_comment = await comment_service.create_comment(movie_id, comment)
+
     return new_comment
