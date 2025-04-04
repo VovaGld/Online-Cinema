@@ -4,8 +4,6 @@ from fastapi import HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database import UserGroupEnum
-from database.models import MovieModel
 from database.models.orders import OrderModel
 from repositories.accounts_rep import UserRepository
 from repositories.cart_item_rep import CartItemRepository
@@ -16,15 +14,14 @@ from repositories.shopping_cart_rep import ShoppingCartRepository
 
 
 class OrderService:
-
     def __init__(
-            self,
-            db: AsyncSession,
-            order_repository: OrderRepository,
-            order_item_repository: OrderItemRepository,
-            cart_repository: ShoppingCartRepository,
-            cart_item_repository: CartItemRepository,
-            user_repository: UserRepository,
+        self,
+        db: AsyncSession,
+        order_repository: OrderRepository,
+        order_item_repository: OrderItemRepository,
+        cart_repository: ShoppingCartRepository,
+        cart_item_repository: CartItemRepository,
+        user_repository: UserRepository,
     ):
         self.db = db
         self.order_crud = order_repository
@@ -42,13 +39,15 @@ class OrderService:
             if not user_cart:
                 raise HTTPException(status_code=400, detail="No movies in cart")
 
-            cart_items = await self.cart_item_crud.get_all_cart_items_by_cart_id(user_cart.id)
+            cart_items = await self.cart_item_crud.get_all_cart_items_by_cart_id(
+                user_cart.id
+            )
 
             movie_ids = [
-                item.movie_id for item in cart_items
+                item.movie_id
+                for item in cart_items
                 if not await self.user_crud.is_movie_in_purchased(
-                    user_id=user.id,
-                    movie_id=item.movie_id
+                    user_id=user.id, movie_id=item.movie_id
                 )
             ]
 
@@ -61,7 +60,9 @@ class OrderService:
                 raise HTTPException(status_code=400, detail=str(e))
 
             try:
-                order_items = await self.order_item_crud.create_order_items(order.id, movie_ids)
+                order_items = await self.order_item_crud.create_order_items(
+                    order.id, movie_ids
+                )
             except SQLAlchemyError as e:
                 raise HTTPException(status_code=400, detail=str(e))
 
@@ -90,14 +91,8 @@ class OrderService:
         movie_list = []
         order_items = await self.order_crud.get_order_items(order_id)
         for item in order_items.order_items:
-            movie_list.append(
-                await self.movie_repository.get(item.movie_id)
-            )
-        return [
-            {"id": movie.id, "name": movie.name}
-            for movie in movie_list
-        ]
-
+            movie_list.append(await self.movie_repository.get(item.movie_id))
+        return [{"id": movie.id, "name": movie.name} for movie in movie_list]
 
     async def set_canceled_status(self, order_id: int) -> None:
         await self.order_crud.set_status(order_id, "canceled")

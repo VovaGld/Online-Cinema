@@ -1,11 +1,11 @@
+from datetime import datetime
 from decimal import Decimal
 from typing import Optional
-
-from datetime import datetime
 
 from pydantic import BaseModel, HttpUrl
 
 from schemas.movie import BaseResponseSchema
+
 
 class OrderSchema(BaseModel):
     datetime: datetime
