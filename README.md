@@ -1,17 +1,15 @@
 # Online-Cinema
 
----
 
 ## Project Description
 
----
 
 This project is a web application for an online cinema platform. It allows users to browse, search, buy and watch movies.
 The application is built using the FastAPI framework. The database is managed using SQLAlchemy and PostgreSQL.
 
 ## Features
 
----
+
 - **JWT authentication**
 - **User registration and login**
 - **Password reset functionality**
@@ -30,7 +28,6 @@ The application is built using the FastAPI framework. The database is managed us
 
 Follow these steps to set up and run the **Online Cinema API** project on your local machine.
 
----
 
 ### **1. Clone the Repository**
 
